@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Printer, Mail, CheckCircle, XCircle, Download } from 'lucide-react'
+import { ChevronLeft, Printer, Mail, CheckCircle, XCircle, Trash2, Download } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { StatutBdcBadge } from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
@@ -44,6 +45,9 @@ interface Bdc {
 
 export default function BdcDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const { data: session } = useSession()
+  const isAdmin = (session?.user as any)?.role === 'ADMIN'
   const [bdc, setBdc] = useState<Bdc | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -82,6 +86,13 @@ export default function BdcDetailPage() {
     } finally {
       setActionLoading(false)
     }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Supprimer ce bon de commande ? Cette action est irréversible.')) return
+    const res = await fetch(`/api/bdc/${id}`, { method: 'DELETE' })
+    if (res.ok) router.push('/bdc')
+    else alert('Impossible de supprimer ce bon de commande.')
   }
 
   const handleSendEmail = async (e: React.FormEvent) => {
@@ -165,6 +176,12 @@ export default function BdcDetailPage() {
               Télécharger PDF
             </Button>
           </a>
+
+          {isAdmin && (
+            <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-600 hover:bg-red-50">
+              <Trash2 size={15} />
+            </Button>
+          )}
         </div>
       </div>
 

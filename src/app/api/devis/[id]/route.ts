@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { calculerTotaux } from '@/lib/totals'
 
@@ -107,8 +109,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
+    const session = await getServerSession(authOptions)
+    const isAdmin = (session?.user as any)?.role === 'ADMIN'
+
     const existing = await prisma.devis.findUnique({ where: { id } })
-    if (existing?.statut === 'ACCEPTE') {
+    if (existing?.statut === 'ACCEPTE' && !isAdmin) {
       return NextResponse.json({ error: 'Impossible de supprimer un devis accepté' }, { status: 403 })
     }
 

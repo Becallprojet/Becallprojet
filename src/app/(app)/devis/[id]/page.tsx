@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Printer, Mail, CheckCircle, XCircle, ClipboardList, Trash2, Ban, Download } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import { StatutDevisBadge } from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
@@ -51,6 +52,8 @@ interface Devis {
 export default function DevisDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { data: session } = useSession()
+  const isAdmin = (session?.user as any)?.role === 'ADMIN'
   const [devis, setDevis] = useState<Devis | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -163,6 +166,7 @@ export default function DevisDetailPage() {
   if (!devis) return <p className="text-slate-500">Devis introuvable.</p>
 
   const canEdit = devis.statut !== 'ACCEPTE' && devis.statut !== 'ABANDONNE'
+  const canDelete = canEdit || isAdmin
   const abonnementLignes = devis.lignes.filter((l) => l.type === 'ABONNEMENT')
   const locationLignes = devis.lignes.filter((l) => l.type === 'LOCATION')
   const prestationLignes = devis.lignes.filter((l) => l.type === 'PRESTATION')
@@ -238,7 +242,7 @@ export default function DevisDetailPage() {
             </Button>
           </a>
 
-          {canEdit && (
+          {canDelete && (
             <Button variant="ghost" size="sm" onClick={handleDelete} className="text-red-600 hover:bg-red-50">
               <Trash2 size={15} />
             </Button>
