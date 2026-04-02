@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── BECALL Design System ─────────────────────────────────────────
+   Palette
+   --night:      #0F2A6B   Bleu nuit  · fond sombre, titres
+   --corporate:  #1A5FBF   Bleu corp  · CTA principal
+   --cyan:       #00C2FF   Cyan tech  · accent, dégradé
+   --green:      #00E5A0   Vert dig.  · succès, secondaire
+   --pale:       #E8F0FD   Bleu pâle  · fond sections claires
+   --pearl:      #F4F6FA   Gris perle · fond app, cards
+   --dark:       #1C1C2E   Anthracite · fond dark premium
+   --white:      #FFFFFF   Blanc pur  · docs, print
+──────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  html { @apply antialiased; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #F4F6FA;
+    color: #1C1C2E;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  /* ── Page layout ── */
+  .page-header   { @apply mb-8; }
+  .page-title    { font-size: 22px; font-weight: 700; color: #0F2A6B; letter-spacing: -0.02em; }
+  .page-subtitle { @apply text-sm mt-1; color: #64748b; }
+
+  /* ── Cards / Sections ── */
+  .form-section {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #E8F0FD;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(15, 42, 107, 0.04);
+  }
+  .form-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0F2A6B;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #E8F0FD;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .form-grid   { @apply grid grid-cols-1 gap-4 sm:grid-cols-2; }
+  .form-grid-3 { @apply grid grid-cols-1 gap-4 sm:grid-cols-3; }
+
+  /* ── Stat cards (dashboard style) ── */
+  .stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #E8F0FD;
+    padding: 20px 24px;
+    box-shadow: 0 1px 3px rgba(15, 42, 107, 0.04);
+  }
+  .stat-card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0F2A6B;
+    letter-spacing: -0.03em;
+  }
+  .stat-card-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Gradient accent bar ── */
+  .becall-bar {
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #0F2A6B 0%, #1A5FBF 40%, #00C2FF 75%, #00E5A0 100%);
+  }
+}
+
+/* Print */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  @page { margin: 15mm; size: A4; }
+}

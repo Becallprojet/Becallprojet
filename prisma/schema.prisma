@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  nom       String
+  prenom    String
+  password  String
+  role      String   @default("USER")
+  actif     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id                  String   @id @default(cuid())
+  statut              String   @default("PROSPECT")
+  civilite            String?
+  prenom              String
+  nom                 String
+  societe             String?
+  poste               String?
+  email               String
+  telephoneFixe       String?
+  telephoneMobile     String?
+  adresseFacturation  String?
+  adresseInstallation String?
+  codePostal          String?
+  ville               String?
+  sourceLead          String?
+  commercial          String?
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  devis          Devis[]
+  bonsDeCommande BonDeCommande[]
+}
+
+model Abonnement {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  nom         String
+  description String?
+  type        String   @default("OPERATEUR")
+  categorie   String   @default("ABONNEMENT")
+  prixHT      Float
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lignes LigneDevis[]
+}
+
+model Prestation {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  nom         String
+  description String?
+  type        String   @default("")
+  prixHT      Float
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lignes LigneDevis[]
+}
+
+model Devis {
+  id                 String    @id @default(cuid())
+  numero             String    @unique
+  objet              String
+  statut             String    @default("BROUILLON")
+  contactId          String
+  contact            Contact   @relation(fields: [contactId], references: [id])
+  dureeEngagement    Int?
+  validite           Int       @default(30)
+  conditions         String?
+  notes              String?
+  totalAbonnementHT  Float     @default(0)
+  totalPrestationsHT Float     @default(0)
+  totalHT            Float     @default(0)
+  tva                Float     @default(0)
+  totalTTC           Float     @default(0)
+  dateEnvoi          DateTime?
+  dateAcceptation    DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  lignes        LigneDevis[]
+  bonDeCommande BonDeCommande?
+}
+
+model LigneDevis {
+  id             String     @id @default(cuid())
+  devisId        String
+  devis          Devis      @relation(fields: [devisId], references: [id], onDelete: Cascade)
+  type           String
+  ordre          Int        @default(0)
+  designation    String
+  description    String?
+  quantite       Float      @default(1)
+  prixUnitaireHT Float
+  totalHT        Float
+  abonnementId   String?
+  abonnement     Abonnement? @relation(fields: [abonnementId], references: [id])
+  prestationId   String?
+  prestation     Prestation? @relation(fields: [prestationId], references: [id])
+  createdAt      DateTime   @default(now())
+
+  ligneBdc LigneBdc?
+}
+
+model BonDeCommande {
+  id                 String    @id @default(cuid())
+  numero             String    @unique
+  statut             String    @default("EN_COURS")
+  devisId            String    @unique
+  devis              Devis     @relation(fields: [devisId], references: [id])
+  contactId          String
+  contact            Contact   @relation(fields: [contactId], references: [id])
+  totalAbonnementHT  Float
+  totalPrestationsHT Float
+  totalHT            Float
+  tva                Float
+  totalTTC           Float
+  notes              String?
+  dateLivraison      DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  lignes LigneBdc[]
+}
+
+model LigneBdc {
+  id             String        @id @default(cuid())
+  bdcId          String
+  bdc            BonDeCommande @relation(fields: [bdcId], references: [id], onDelete: Cascade)
+  ligneDevisId   String        @unique
+  ligneDevis     LigneDevis    @relation(fields: [ligneDevisId], references: [id])
+  type           String
+  ordre          Int           @default(0)
+  designation    String
+  description    String?
+  quantite       Float
+  prixUnitaireHT Float
+  totalHT        Float
+  createdAt      DateTime      @default(now())
+}
