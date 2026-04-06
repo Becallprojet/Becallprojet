@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { anthropic } from '@/lib/anthropic'
+import { getAnthropicClient } from '@/lib/anthropic'
 
 export async function POST() {
   try {
@@ -113,7 +113,7 @@ Génère une réponse JSON avec exactement ces deux clés :
 
 Réponds uniquement avec le JSON valide, sans markdown ni texte autour.`
 
-    const message = await anthropic.messages.create({
+    const message = await getAnthropicClient().messages.create({
       model: 'claude-3-5-haiku-20241022',
       max_tokens: 2000,
       system:

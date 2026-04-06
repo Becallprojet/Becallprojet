@@ -4,10 +4,6 @@ const globalForAnthropic = globalThis as unknown as {
   anthropic: Anthropic | undefined
 }
 
-if (process.env.NODE_ENV === 'production' && !process.env.ANTHROPIC_API_KEY) {
-  throw new Error('ANTHROPIC_API_KEY est manquante. Veuillez la définir dans votre fichier .env')
-}
-
 export const anthropic =
   globalForAnthropic.anthropic ??
   new Anthropic({
@@ -15,3 +11,10 @@ export const anthropic =
   })
 
 if (process.env.NODE_ENV !== 'production') globalForAnthropic.anthropic = anthropic
+
+export function getAnthropicClient(): Anthropic {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY est manquante. Veuillez la définir dans votre fichier .env')
+  }
+  return anthropic
+}
