@@ -12,7 +12,3 @@ export const prisma =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// Enable foreign key support for SQLite cascade deletes
-prisma.$connect().then(() => {
-  prisma.$executeRawUnsafe('PRAGMA foreign_keys = ON').catch(() => {})
-})
