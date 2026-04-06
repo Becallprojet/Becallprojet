@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
     const bdc = await prisma.bonDeCommande.findUnique({
       where: { id },
@@ -19,6 +21,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Bon de commande introuvable' }, { status: 404 })
     }
 
+    if (bdc.userId && bdc.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     return NextResponse.json(bdc)
   } catch (error) {
     console.error(error)
@@ -28,7 +34,19 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
+
+    const existing = await prisma.bonDeCommande.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Bon de commande introuvable' }, { status: 404 })
+    }
+    if (existing.userId && existing.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     const body = await request.json()
 
     const bdc = await prisma.bonDeCommande.update({
@@ -49,8 +67,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
-    if ((session?.user as any)?.role !== 'ADMIN') {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
+    if (user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
     }
 

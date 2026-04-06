@@ -1,27 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, isNextResponse, userScopeFilter } from '@/lib/session'
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const statut = searchParams.get('statut') || ''
 
+    const scopeFilter = userScopeFilter(user.id, user.role)
+
     const contacts = await prisma.contact.findMany({
       where: {
-        AND: [
-          statut ? { statut } : {},
-          search
-            ? {
-                OR: [
-                  { nom: { contains: search } },
-                  { prenom: { contains: search } },
-                  { societe: { contains: search } },
-                  { email: { contains: search } },
-                ],
-              }
-            : {},
-        ],
+        ...(Object.keys(scopeFilter).length ? scopeFilter : {}),
+        ...(statut ? { statut } : {}),
+        ...(search
+          ? {
+              OR: [
+                { nom: { contains: search } },
+                { prenom: { contains: search } },
+                { societe: { contains: search } },
+                { email: { contains: search } },
+              ],
+            }
+          : {}),
       },
       include: {
         _count: { select: { devis: true, bonsDeCommande: true } },
@@ -38,6 +43,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const body = await request.json()
 
     const contact = await prisma.contact.create({
@@ -60,6 +68,7 @@ export async function POST(request: NextRequest) {
         commercial: body.commercial || null,
         notes: body.notes || null,
         linkedinUrl: body.linkedinUrl || null,
+        userId: user.id,
       },
     })
 

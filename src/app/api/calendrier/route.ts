@@ -1,20 +1,24 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createGoogleEvent } from '@/lib/googleCalendar'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { searchParams } = new URL(request.url)
     const from = searchParams.get('from')
     const to = searchParams.get('to')
-    const userId = searchParams.get('userId') || undefined
+
+    // For regular users, always use their own userId. Admin can optionally filter by ?userId=
+    const filterUserId = user.role === 'ADMIN' ? (searchParams.get('userId') || undefined) : user.id
 
     const whereBase: Record<string, unknown> = {}
-    if (userId) whereBase.userId = userId
+    if (filterUserId) whereBase.userId = filterUserId
     if (from || to) {
       whereBase.date = {}
       if (from) (whereBase.date as Record<string, unknown>).gte = new Date(from)
@@ -49,12 +53,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
 
-    const userId = (session.user as { id: string }).id
+    const userId = user.id
     const body = await request.json()
 
     const rdv = await prisma.activite.create({

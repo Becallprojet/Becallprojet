@@ -2,29 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateNumeroDevis } from '@/lib/numbering'
 import { calculerTotaux } from '@/lib/totals'
+import { requireAuth, isNextResponse, userScopeFilter } from '@/lib/session'
 
 export async function GET(request: NextRequest) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const statut = searchParams.get('statut') || ''
     const contactId = searchParams.get('contactId') || ''
 
+    const scopeFilter = userScopeFilter(user.id, user.role)
+
     const devis = await prisma.devis.findMany({
       where: {
-        AND: [
-          statut ? { statut } : {},
-          contactId ? { contactId } : {},
-          search
-            ? {
-                OR: [
-                  { numero: { contains: search } },
-{ contact: { societe: { contains: search } } },
-                  { contact: { nom: { contains: search } } },
-                ],
-              }
-            : {},
-        ],
+        ...(Object.keys(scopeFilter).length ? scopeFilter : {}),
+        ...(statut ? { statut } : {}),
+        ...(contactId ? { contactId } : {}),
+        ...(search
+          ? {
+              OR: [
+                { numero: { contains: search } },
+                { contact: { societe: { contains: search } } },
+                { contact: { nom: { contains: search } } },
+              ],
+            }
+          : {}),
       },
       include: {
         contact: { select: { id: true, prenom: true, nom: true, societe: true } },
@@ -42,6 +47,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const body = await request.json()
     const { lignes = [], ...devisData } = body
 
@@ -60,6 +68,7 @@ export async function POST(request: NextRequest) {
         noteAbonnements: devisData.noteAbonnements || null,
         noteLocation: devisData.noteLocation || null,
         notePrestation: devisData.notePrestation || null,
+        userId: user.id,
         ...totaux,
         lignes: {
           create: lignes.map(

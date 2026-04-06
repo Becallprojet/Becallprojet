@@ -20,8 +20,11 @@ model User {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  activites Activite[]
-  rappels   Rappel[]
+  activites      Activite[]
+  rappels        Rappel[]
+  contacts       Contact[]
+  devis          Devis[]
+  bonsDeCommande BonDeCommande[]
 }
 
 model Contact {
@@ -53,6 +56,8 @@ model Contact {
   bonsDeCommande BonDeCommande[]
   activites      Activite[]
   rappels        Rappel[]
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model Abonnement {
@@ -110,6 +115,8 @@ model Devis {
 
   lignes        LigneDevis[]
   bonDeCommande BonDeCommande?
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
 }
 
 model LigneDevis {
@@ -154,6 +161,8 @@ model BonDeCommande {
   updatedAt          DateTime  @updatedAt
 
   lignes LigneBdc[]
+  userId String?
+  user   User?    @relation(fields: [userId], references: [id])
 }
 
 model PhraseNote {

@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
+
+    const whereFilter =
+      user.role === 'ADMIN'
+        ? { prospectId: id }
+        : { prospectId: id, userId: user.id }
+
     const rappels = await prisma.rappel.findMany({
-      where: { prospectId: id },
+      where: whereFilter,
       include: { user: { select: { prenom: true, nom: true } } },
       orderBy: { date: 'asc' },
     })
@@ -20,14 +28,12 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
 
     const { id } = await params
     const body = await request.json()
-    const userId = (session.user as any).id as string
+    const userId = user.id
 
     const rappel = await prisma.rappel.create({
       data: {

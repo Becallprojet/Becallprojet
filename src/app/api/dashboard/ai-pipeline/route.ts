@@ -1,17 +1,17 @@
 export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getAnthropicClient } from '@/lib/anthropic'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
+    const isAdmin = user.role === 'ADMIN'
+    const userFilter = isAdmin ? {} : { userId: user.id }
 
     const now = new Date()
 
@@ -29,21 +29,22 @@ export async function POST() {
     ] = await Promise.all([
       prisma.contact.groupBy({
         by: ['stade'],
-        where: { statut: 'PROSPECT' },
+        where: { ...userFilter, statut: 'PROSPECT' },
         _count: { _all: true },
       }),
       prisma.devis.aggregate({
-        where: { statut: 'ENVOYE' },
+        where: { ...userFilter, statut: 'ENVOYE' },
         _sum: { totalTTC: true },
         _count: true,
       }),
       prisma.devis.aggregate({
-        where: { statut: 'ACCEPTE' },
+        where: { ...userFilter, statut: 'ACCEPTE' },
         _sum: { totalTTC: true },
         _count: true,
       }),
       prisma.rappel.findMany({
         where: {
+          ...(isAdmin ? {} : { userId: user.id }),
           fait: false,
           date: { lt: now },
         },
@@ -53,12 +54,12 @@ export async function POST() {
           prospect: { select: { prenom: true, nom: true, societe: true } },
         },
       }),
-      prisma.contact.count(),
-      prisma.contact.count({ where: { stade: 'GAGNE' } }),
-      prisma.devis.count({ where: { statut: 'BROUILLON' } }),
-      prisma.devis.count({ where: { statut: 'ENVOYE' } }),
-      prisma.devis.count({ where: { statut: 'ACCEPTE' } }),
-      prisma.devis.count({ where: { statut: 'REFUSE' } }),
+      prisma.contact.count({ where: userFilter }),
+      prisma.contact.count({ where: { ...userFilter, stade: 'GAGNE' } }),
+      prisma.devis.count({ where: { ...userFilter, statut: 'BROUILLON' } }),
+      prisma.devis.count({ where: { ...userFilter, statut: 'ENVOYE' } }),
+      prisma.devis.count({ where: { ...userFilter, statut: 'ACCEPTE' } }),
+      prisma.devis.count({ where: { ...userFilter, statut: 'REFUSE' } }),
     ])
 
     const tauxConversion = totalContacts > 0 ? Math.round((contactsGagne / totalContacts) * 1000) / 10 : 0

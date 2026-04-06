@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
     const contact = await prisma.contact.findUnique({
       where: { id },
@@ -35,6 +39,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Contact introuvable' }, { status: 404 })
     }
 
+    if (contact.userId && contact.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     return NextResponse.json(contact)
   } catch (error) {
     console.error(error)
@@ -44,7 +52,19 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
+
+    const existing = await prisma.contact.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Contact introuvable' }, { status: 404 })
+    }
+    if (existing.userId && existing.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     const body = await request.json()
 
     const contact = await prisma.contact.update({
@@ -80,7 +100,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
+
+    const existing = await prisma.contact.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Contact introuvable' }, { status: 404 })
+    }
+    if (existing.userId && existing.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     await prisma.contact.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (error) {

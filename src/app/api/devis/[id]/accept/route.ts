@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateNumeroBdc, generateNumeroClient } from '@/lib/numbering'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
     const devis = await prisma.devis.findUnique({
       where: { id },
@@ -15,6 +19,9 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
 
     if (!devis) {
       return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
+    }
+    if (devis.userId && devis.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
     }
     if (devis.bonDeCommande) {
       return NextResponse.json(
@@ -52,6 +59,7 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
           statut: 'EN_COURS',
           devisId: id,
           contactId: devis.contactId,
+          userId: devis.userId,
           totalAbonnementHT: devis.totalAbonnementHT,
           totalPrestationsHT: devis.totalPrestationsHT,
           totalHT: devis.totalHT,

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { calculerTotaux } from '@/lib/totals'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
     const devis = await prisma.devis.findUnique({
       where: { id },
@@ -25,6 +27,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
     }
 
+    if (devis.userId && devis.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+
     return NextResponse.json(devis)
   } catch (error) {
     console.error(error)
@@ -34,12 +40,18 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
     const body = await request.json()
 
     const existing = await prisma.devis.findUnique({ where: { id } })
     if (!existing) {
       return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
+    }
+    if (existing.userId && existing.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
     }
     if (existing.statut === 'ACCEPTE') {
       return NextResponse.json({ error: 'Impossible de modifier un devis accepté' }, { status: 403 })
@@ -110,12 +122,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
+
     const { id } = await params
-    const session = await getServerSession(authOptions)
-    const isAdmin = (session?.user as any)?.role === 'ADMIN'
+    const isAdmin = user.role === 'ADMIN'
 
     const existing = await prisma.devis.findUnique({ where: { id } })
-    if (existing?.statut === 'ACCEPTE' && !isAdmin) {
+    if (!existing) {
+      return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
+    }
+    if (existing.userId && existing.userId !== user.id && !isAdmin) {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    }
+    if (existing.statut === 'ACCEPTE' && !isAdmin) {
       return NextResponse.json({ error: 'Impossible de supprimer un devis accepté' }, { status: 403 })
     }
 
