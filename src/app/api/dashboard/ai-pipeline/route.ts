@@ -76,7 +76,7 @@ export async function POST() {
             .slice(0, 10)
             .map(
               (r) =>
-                `- [${r.date.toLocaleDateString('fr-FR')}] ${r.titre} — ${r.prospect.societe || `${r.prospect.prenom} ${r.prospect.nom}`}`
+                `- [${r.date.toLocaleDateString('fr-FR')}] ${r.titre} — ${r.prospect?.societe || `${r.prospect?.prenom ?? ''} ${r.prospect?.nom ?? ''}`.trim() || 'Prospect inconnu'}`
             )
             .join('\n')
         : 'Aucun rappel en retard'
