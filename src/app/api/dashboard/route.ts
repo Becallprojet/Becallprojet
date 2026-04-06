@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    const now = new Date()
+
     const [
       totalProspects,
       totalClients,
@@ -14,6 +16,12 @@ export async function GET() {
       bdcLivre,
       dernierDevis,
       derniersContacts,
+      pipelineParStade,
+      activitesRecentes,
+      rappelsDuJour,
+      caBdcAggregate,
+      totalContacts,
+      contactsGagne,
     ] = await Promise.all([
       prisma.contact.count({ where: { statut: 'PROSPECT' } }),
       prisma.contact.count({ where: { statut: 'CLIENT' } }),
@@ -32,12 +40,43 @@ export async function GET() {
         take: 5,
         orderBy: { createdAt: 'desc' },
       }),
+      prisma.contact.groupBy({
+        by: ['stade'],
+        where: { statut: 'PROSPECT' },
+        _count: { _all: true },
+      }),
+      prisma.activite.findMany({
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          prospect: { select: { id: true, prenom: true, nom: true, societe: true } },
+          user: { select: { id: true, prenom: true, nom: true } },
+        },
+      }),
+      prisma.rappel.findMany({
+        where: {
+          fait: false,
+          date: { lte: now },
+        },
+        include: {
+          prospect: { select: { id: true, prenom: true, nom: true, societe: true } },
+        },
+        orderBy: { date: 'asc' },
+      }),
+      prisma.bonDeCommande.aggregate({
+        where: { statut: { in: ['EN_COURS', 'LIVRE'] } },
+        _sum: { totalTTC: true },
+      }),
+      prisma.contact.count(),
+      prisma.contact.count({ where: { stade: 'GAGNE' } }),
     ])
 
     const totalCADevis = await prisma.devis.aggregate({
       where: { statut: 'ACCEPTE' },
       _sum: { totalTTC: true },
     })
+
+    const tauxConversion = totalContacts > 0 ? (contactsGagne / totalContacts) * 100 : 0
 
     return NextResponse.json({
       contacts: { prospects: totalProspects, clients: totalClients },
@@ -46,6 +85,11 @@ export async function GET() {
       ca: totalCADevis._sum.totalTTC || 0,
       dernierDevis,
       derniersContacts,
+      pipelineParStade: pipelineParStade.map((s) => ({ stade: s.stade ?? 'NOUVEAU', count: s._count._all })),
+      activitesRecentes,
+      rappelsDuJour,
+      caBdc: caBdcAggregate._sum.totalTTC || 0,
+      tauxConversion: Math.round(tauxConversion * 10) / 10,
     })
   } catch (error) {
     console.error(error)
