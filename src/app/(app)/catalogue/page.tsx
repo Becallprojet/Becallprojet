@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Edit, Trash2, Package, Wrench, MonitorSmartphone } from 'lucide-react'
+import { Plus, Edit, Trash2, Package, Wrench, MonitorSmartphone, MessageSquare } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
 import Input from '@/components/ui/Input'
@@ -12,6 +12,7 @@ import { formatMontant } from '@/lib/utils'
 
 interface Abonnement { id: string; reference: string; nom: string; type: string; categorie: string; prixHT: number; description?: string }
 interface Prestation { id: string; reference: string; nom: string; type: string; prixHT: number; description?: string }
+interface PhraseNote { id: string; texte: string; ordre: number }
 
 const ABO_TYPE_OPTIONS = [
   { value: 'Opérateur', label: 'Opérateur' },
@@ -38,16 +39,19 @@ const EMPTY_LOC: Abonnement = { id: '', reference: '', nom: '', type: 'Matériel
 const EMPTY_PREST: Prestation = { id: '', reference: '', nom: '', type: 'FAS', prixHT: 0, description: '' }
 
 export default function CataloguePage() {
-  const [tab, setTab] = useState<'abonnements' | 'location' | 'prestations'>('abonnements')
+  const [tab, setTab] = useState<'abonnements' | 'location' | 'prestations' | 'phrases'>('abonnements')
   const [abonnements, setAbonnements] = useState<Abonnement[]>([])
   const [locations, setLocations] = useState<Abonnement[]>([])
   const [prestations, setPrestations] = useState<Prestation[]>([])
+  const [phrases, setPhrases] = useState<PhraseNote[]>([])
   const [showAboModal, setShowAboModal] = useState(false)
   const [showLocModal, setShowLocModal] = useState(false)
   const [showPrestModal, setShowPrestModal] = useState(false)
+  const [showPhraseModal, setShowPhraseModal] = useState(false)
   const [editingAbo, setEditingAbo] = useState<Abonnement>(EMPTY_ABO)
   const [editingLoc, setEditingLoc] = useState<Abonnement>(EMPTY_LOC)
   const [editingPrest, setEditingPrest] = useState<Prestation>(EMPTY_PREST)
+  const [editingPhrase, setEditingPhrase] = useState<PhraseNote>({ id: '', texte: '', ordre: 0 })
   const [saving, setSaving] = useState(false)
 
   const loadAbonnements = () =>
@@ -56,11 +60,14 @@ export default function CataloguePage() {
     fetch('/api/catalogue/abonnements?categorie=LOCATION').then((r) => r.json()).then((d) => setLocations(Array.isArray(d) ? d : []))
   const loadPrestations = () =>
     fetch('/api/catalogue/prestations').then((r) => r.json()).then((d) => setPrestations(Array.isArray(d) ? d : []))
+  const loadPhrases = () =>
+    fetch('/api/catalogue/phrases').then((r) => r.json()).then((d) => setPhrases(Array.isArray(d) ? d : []))
 
   useEffect(() => {
     loadAbonnements()
     loadLocations()
     loadPrestations()
+    loadPhrases()
   }, [])
 
   const openAboEdit = (item?: Abonnement) => {
@@ -124,13 +131,42 @@ export default function CataloguePage() {
     loadPrestations()
   }
 
+  const openPhraseEdit = (phrase?: PhraseNote) => {
+    setEditingPhrase(phrase ? { ...phrase } : { id: '', texte: '', ordre: phrases.length })
+    setShowPhraseModal(true)
+  }
+
+  const savePhrase = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const url = editingPhrase.id ? `/api/catalogue/phrases/${editingPhrase.id}` : '/api/catalogue/phrases'
+      const method = editingPhrase.id ? 'PUT' : 'POST'
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texte: editingPhrase.texte, ordre: editingPhrase.ordre }) })
+      if (!res.ok) throw new Error()
+      setShowPhraseModal(false)
+      loadPhrases()
+    } catch {
+      alert('Erreur lors de la sauvegarde.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deletePhrase = async (id: string) => {
+    if (!confirm('Supprimer cette phrase ?')) return
+    await fetch(`/api/catalogue/phrases/${id}`, { method: 'DELETE' })
+    loadPhrases()
+  }
+
   const handleAdd = () => {
     if (tab === 'abonnements') openAboEdit()
     else if (tab === 'location') openLocEdit()
+    else if (tab === 'phrases') openPhraseEdit()
     else openPrestEdit()
   }
 
-  const addLabel = tab === 'abonnements' ? 'Nouvel abonnement' : tab === 'location' ? 'Nouvelle location' : 'Nouvelle prestation'
+  const addLabel = tab === 'abonnements' ? 'Nouvel abonnement' : tab === 'location' ? 'Nouvelle location' : tab === 'phrases' ? 'Nouvelle phrase' : 'Nouvelle prestation'
 
   return (
     <div>
@@ -151,6 +187,7 @@ export default function CataloguePage() {
           { key: 'abonnements', label: 'Abonnements', icon: Package, count: abonnements.length },
           { key: 'location', label: 'Location de matériel', icon: MonitorSmartphone, count: locations.length },
           { key: 'prestations', label: 'Prestations', icon: Wrench, count: prestations.length },
+          { key: 'phrases', label: 'Notes prédéfinies', icon: MessageSquare, count: phrases.length },
         ].map(({ key, label, icon: Icon, count }) => (
           <button
             key={key}
@@ -232,6 +269,34 @@ export default function CataloguePage() {
         </div>
       )}
 
+      {/* Notes prédéfinies */}
+      {tab === 'phrases' && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          {phrases.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-slate-400">
+              <MessageSquare size={28} className="mb-2 text-slate-300" />
+              <p className="text-sm">Aucune phrase prédéfinie</p>
+              <p className="text-xs mt-1">Ces phrases apparaissent comme choix dans le formulaire de devis</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {phrases.map((ph, i) => (
+                <div key={ph.id} className="flex items-start justify-between px-6 py-4 hover:bg-slate-50">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xs text-slate-400 font-mono mt-0.5 w-4">{i + 1}.</span>
+                    <p className="text-sm text-slate-700">{ph.texte}</p>
+                  </div>
+                  <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                    <button onClick={() => openPhraseEdit(ph)} className="text-slate-400 hover:text-[#0F2A6B] transition-colors"><Edit size={15} /></button>
+                    <button onClick={() => deletePhrase(ph.id)} className="text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={15} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Modal Abonnement */}
       <Modal open={showAboModal} onClose={() => setShowAboModal(false)} title={editingAbo.id ? "Modifier l'abonnement" : 'Nouvel abonnement'} size="md">
         <form onSubmit={(e) => saveAbo(e, editingAbo, () => setShowAboModal(false), loadAbonnements)} className="space-y-4">
@@ -278,6 +343,23 @@ export default function CataloguePage() {
           <Input label="Prix HT (€) *" type="number" step="0.01" min="0" value={editingPrest.prixHT} onChange={(e) => setEditingPrest((p) => ({ ...p, prixHT: parseFloat(e.target.value) || 0 }))} required />
           <div className="flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => setShowPrestModal(false)}>Annuler</Button>
+            <Button type="submit" loading={saving}>Enregistrer</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Phrase */}
+      <Modal open={showPhraseModal} onClose={() => setShowPhraseModal(false)} title={editingPhrase.id ? 'Modifier la phrase' : 'Nouvelle phrase prédéfinie'} size="md">
+        <form onSubmit={savePhrase} className="space-y-4">
+          <Textarea
+            label="Texte de la phrase *"
+            value={editingPhrase.texte}
+            onChange={(e) => setEditingPhrase((p) => ({ ...p, texte: e.target.value }))}
+            rows={3}
+            hint="Cette phrase apparaîtra comme option à cocher dans le formulaire de devis"
+          />
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => setShowPhraseModal(false)}>Annuler</Button>
             <Button type="submit" loading={saving}>Enregistrer</Button>
           </div>
         </form>

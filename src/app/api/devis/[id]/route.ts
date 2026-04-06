@@ -54,13 +54,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return tx.devis.update({
         where: { id },
         data: {
-          objet: devisData.objet,
           statut: statut || existing.statut,
           contactId: devisData.contactId,
           dureeEngagement: devisData.dureeEngagement ? parseInt(devisData.dureeEngagement) : null,
           validite: devisData.validite ? parseInt(devisData.validite) : 30,
           conditions: devisData.conditions || null,
           notes: devisData.notes || null,
+          noteAbonnements: devisData.noteAbonnements || null,
+          noteLocation: devisData.noteLocation || null,
+          notePrestation: devisData.notePrestation || null,
           dateEnvoi: statut === 'ENVOYE' && !existing.dateEnvoi ? new Date() : existing.dateEnvoi,
           ...totaux,
           lignes: {

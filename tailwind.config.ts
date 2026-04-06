@@ -10,13 +10,11 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          night:     '#0F2A6B',
-          corporate: '#1A5FBF',
-          cyan:      '#00C2FF',
-          green:     '#00E5A0',
-          pale:      '#E8F0FD',
-          pearl:     '#F4F6FA',
-          dark:      '#1C1C2E',
+          electric: '#007BFF',
+          slate:    '#2C3E50',
+          pale:     '#EEF5FF',
+          pearl:    '#F4F6FA',
+          dark:     '#1C1C2E',
         },
       },
       fontFamily: {

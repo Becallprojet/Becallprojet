@@ -19,8 +19,7 @@ export async function GET(request: NextRequest) {
             ? {
                 OR: [
                   { numero: { contains: search } },
-                  { objet: { contains: search } },
-                  { contact: { societe: { contains: search } } },
+{ contact: { societe: { contains: search } } },
                   { contact: { nom: { contains: search } } },
                 ],
               }
@@ -52,13 +51,15 @@ export async function POST(request: NextRequest) {
     const devis = await prisma.devis.create({
       data: {
         numero,
-        objet: devisData.objet,
         statut: 'BROUILLON',
         contactId: devisData.contactId,
         dureeEngagement: devisData.dureeEngagement ? parseInt(devisData.dureeEngagement) : null,
         validite: devisData.validite ? parseInt(devisData.validite) : 30,
         conditions: devisData.conditions || null,
         notes: devisData.notes || null,
+        noteAbonnements: devisData.noteAbonnements || null,
+        noteLocation: devisData.noteLocation || null,
+        notePrestation: devisData.notePrestation || null,
         ...totaux,
         lignes: {
           create: lignes.map(

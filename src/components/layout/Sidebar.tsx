@@ -29,19 +29,19 @@ export default function Sidebar() {
       className="flex flex-col flex-shrink-0"
       style={{
         width: '256px',
-        background: '#0F2A6B',
+        background: '#2C3E50',
         borderRight: '1px solid rgba(255,255,255,0.06)',
       }}
     >
       {/* Logo */}
-      <div style={{ background: '#ffffff', borderBottom: '1px solid #E8F0FD' }}>
+      <div style={{ background: '#ffffff', borderBottom: '1px solid #EEF5FF' }}>
         <Image
           src="/logo.png"
           alt="BECALL"
           width={256}
           height={171}
           className="block w-full h-auto"
-          style={{ maxHeight: '72px', objectFit: 'contain', padding: '12px 20px' }}
+          style={{ maxHeight: '160px', objectFit: 'contain', padding: '4px 8px' }}
         />
       </div>
 
@@ -62,9 +62,9 @@ export default function Sidebar() {
               href={href}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
               style={active ? {
-                background: 'rgba(0, 194, 255, 0.15)',
-                color: '#00C2FF',
-                borderLeft: '3px solid #00C2FF',
+                background: 'rgba(0, 123, 255, 0.18)',
+                color: '#007BFF',
+                borderLeft: '3px solid #007BFF',
                 paddingLeft: '9px',
               } : {
                 color: 'rgba(255,255,255,0.55)',
@@ -91,9 +91,9 @@ export default function Sidebar() {
               href="/admin"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
               style={isActive('/admin') ? {
-                background: 'rgba(0, 194, 255, 0.15)',
-                color: '#00C2FF',
-                borderLeft: '3px solid #00C2FF',
+                background: 'rgba(0, 123, 255, 0.18)',
+                color: '#007BFF',
+                borderLeft: '3px solid #007BFF',
                 paddingLeft: '9px',
               } : {
                 color: 'rgba(255,255,255,0.55)',
@@ -123,16 +123,16 @@ export default function Sidebar() {
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
                 style={{
                   background: isAdmin
-                    ? 'linear-gradient(135deg, #00C2FF, #00E5A0)'
+                    ? 'linear-gradient(135deg, #007BFF, #00C2FF)'
                     : 'rgba(255,255,255,0.12)',
-                  color: isAdmin ? '#0F2A6B' : 'white',
+                  color: isAdmin ? '#ffffff' : 'white',
                 }}
               >
                 {(session.user.name?.[0] ?? '?').toUpperCase()}
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-white truncate">{session.user.name}</p>
-                <p className="text-xs truncate" style={{ color: isAdmin ? '#00C2FF' : 'rgba(255,255,255,0.35)' }}>
+                <p className="text-xs truncate" style={{ color: isAdmin ? '#007BFF' : 'rgba(255,255,255,0.35)' }}>
                   {isAdmin ? 'Administrateur' : 'Utilisateur'}
                 </p>
               </div>
@@ -141,7 +141,7 @@ export default function Sidebar() {
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="flex-shrink-0 transition-colors"
               style={{ color: 'rgba(255,255,255,0.3)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#00C2FF')}
+              onMouseEnter={e => (e.currentTarget.style.color = '#007BFF')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
               title="Se déconnecter"
             >

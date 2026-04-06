@@ -50,6 +50,9 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
           totalHT: devis.totalHT,
           tva: devis.tva,
           totalTTC: devis.totalTTC,
+          noteAbonnements: devis.noteAbonnements,
+          noteLocation: devis.noteLocation,
+          notePrestation: devis.notePrestation,
           lignes: {
             create: devis.lignes.map((l) => ({
               ligneDevisId: l.id,

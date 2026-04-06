@@ -5,47 +5,58 @@ export default function PrintLayout({ children }: { children: React.ReactNode })
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; }
         body {
-          margin: 0; padding: 14mm 16mm;
+          margin: 0; padding: 2mm 6mm 10mm;
           font-family: 'Inter', Arial, sans-serif;
           font-size: 9.5pt; color: #1C1C2E; background: white;
           -webkit-font-smoothing: antialiased;
         }
         @media print {
-          @page { margin: 14mm 16mm; size: A4; }
+          @page { margin: 2mm 6mm 10mm; size: A4; }
           .print-btn { display: none !important; }
         }
+
+        /* ── Palette documents
+           #1E7BC4  bleu électrique  · accents, badges, bordures
+           #2B4C8C  bleu marine      · éléments secondaires, section prestations
+           #3D5068  ardoise profond  · titres, numéros, en-têtes de section
+        ── */
 
         /* ── Gradient bar ── */
         .gradient-bar {
           height: 3pt;
-          background: linear-gradient(90deg, #0F2A6B 0%, #1A5FBF 40%, #00C2FF 75%, #00E5A0 100%);
+          background: linear-gradient(90deg, #3D5068 0%, #2B4C8C 50%, #1E7BC4 100%);
           border-radius: 2pt;
-          margin-bottom: 14pt;
+          margin-bottom: 4pt;
         }
+
+        /* ── Logo centré en haut ── */
+        .logo-top {
+          text-align: center;
+          margin-bottom: 3pt;
+        }
+        .logo-img { height: 100pt; width: auto; object-fit: contain; display: inline-block; }
 
         /* ── Header ── */
         .header {
           display: flex; justify-content: space-between; align-items: flex-start;
-          margin-bottom: 18pt; padding-bottom: 14pt;
-          border-bottom: 2pt solid #E8F0FD;
+          margin-bottom: 6pt; padding-bottom: 4pt;
         }
-        .logo-wrap { display: flex; flex-direction: column; gap: 5pt; }
-        .logo-img  { height: 52pt; width: auto; object-fit: contain; }
+        .logo-wrap { display: none; }
         .company-info { font-size: 8pt; color: #64748b; line-height: 1.6; }
 
         .doc-title { text-align: right; }
         .doc-label  { font-size: 8pt; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; }
-        .doc-number { font-size: 20pt; font-weight: 700; color: #0F2A6B; letter-spacing: -0.02em; margin: 3pt 0; }
+        .doc-number { display: none; }
         .doc-status {
           display: inline-block; padding: 2.5pt 9pt;
           border-radius: 20pt; font-size: 7.5pt; font-weight: 700;
         }
         .status-BROUILLON  { background: #F4F6FA; color: #64748b; }
-        .status-ENVOYE     { background: #E8F0FD; color: #1A5FBF; }
+        .status-ENVOYE     { background: #ddeaf7; color: #1E7BC4; }
         .status-ACCEPTE    { background: #e6fdf4; color: #00875a; }
         .status-REFUSE     { background: #fff5f5; color: #dc2626; }
         .status-ABANDONNE  { background: #fff7ed; color: #c2410c; }
-        .status-EN_COURS   { background: #E8F0FD; color: #1A5FBF; }
+        .status-EN_COURS   { background: #ddeaf7; color: #1E7BC4; }
         .status-LIVRE      { background: #e6fdf4; color: #00875a; }
         .status-ANNULE     { background: #fff5f5; color: #dc2626; }
 
@@ -55,14 +66,14 @@ export default function PrintLayout({ children }: { children: React.ReactNode })
           gap: 14pt; margin-bottom: 14pt;
         }
         .party-box {
-          padding: 10pt 12pt; background: #F4F6FA;
-          border-radius: 6pt; border-left: 3pt solid #1A5FBF;
+          padding: 10pt 12pt; background: #f5f8fc;
+          border-radius: 6pt; border-left: 3pt solid #1E7BC4;
         }
         .party-label {
-          font-size: 7pt; font-weight: 700; color: #1A5FBF;
+          font-size: 7pt; font-weight: 700; color: #1E7BC4;
           text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5pt;
         }
-        .party-name  { font-size: 10.5pt; font-weight: 700; color: #0F2A6B; }
+        .party-name  { font-size: 10.5pt; font-weight: 700; color: #3D5068; }
         .party-line  { font-size: 8.5pt; color: #475569; margin-top: 1.5pt; }
 
         /* ── Meta ── */
@@ -71,11 +82,11 @@ export default function PrintLayout({ children }: { children: React.ReactNode })
           gap: 7pt; margin-bottom: 14pt;
         }
         .meta-item {
-          padding: 7pt 8pt; border: 1pt solid #E8F0FD;
+          padding: 7pt 8pt; border: 1pt solid #ddeaf7;
           border-radius: 5pt; background: white;
         }
         .meta-label { font-size: 7pt; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
-        .meta-value { font-size: 9.5pt; font-weight: 600; color: #0F2A6B; margin-top: 2pt; }
+        .meta-value { font-size: 8.5pt; font-weight: 600; color: #3D5068; margin-top: 2pt; }
 
         /* ── Section titles ── */
         .section-title {
@@ -83,21 +94,21 @@ export default function PrintLayout({ children }: { children: React.ReactNode })
           margin: 10pt 0 0; border-radius: 4pt 4pt 0 0;
           text-transform: uppercase; letter-spacing: 0.06em;
         }
-        .section-abo   { background: #0F2A6B; color: white; }
-        .section-prest { background: #1C1C2E; color: white; }
+        .section-abo   { background: #3D5068; color: white; }
+        .section-prest { background: #2B4C8C; color: white; }
 
         /* ── Table ── */
         table { width: 100%; border-collapse: collapse; }
-        thead tr { background: #F4F6FA; }
+        thead tr { background: #f5f8fc; }
         th {
           padding: 5.5pt 8pt; text-align: left; font-size: 7.5pt;
           font-weight: 600; color: #64748b; text-transform: uppercase;
-          letter-spacing: 0.05em; border-bottom: 1pt solid #E8F0FD;
+          letter-spacing: 0.05em; border-bottom: 1pt solid #ddeaf7;
         }
         th.right { text-align: right; }
-        td { padding: 6pt 8pt; font-size: 9pt; border-bottom: 1pt solid #F4F6FA; vertical-align: top; }
+        td { padding: 6pt 8pt; font-size: 9pt; border-bottom: 1pt solid #f5f8fc; vertical-align: top; }
         td.right { text-align: right; }
-        .td-designation { font-weight: 500; color: #0F2A6B; }
+        .td-designation { font-weight: 500; color: #3D5068; }
         .td-desc { font-size: 7.5pt; color: #94a3b8; margin-top: 1.5pt; }
 
         /* ── Totals ── */
@@ -108,12 +119,12 @@ export default function PrintLayout({ children }: { children: React.ReactNode })
           padding: 3.5pt 8pt; font-size: 9.5pt;
         }
         .totals-row.sep {
-          border-top: 1pt solid #E8F0FD; margin-top: 3pt; padding-top: 7pt;
+          border-top: 1pt solid #ddeaf7; margin-top: 3pt; padding-top: 7pt;
         }
         .totals-row.total {
           font-size: 11pt; font-weight: 700; color: white;
           padding: 7pt 12pt;
-          background: linear-gradient(90deg, #0F2A6B, #1A5FBF);
+          background: linear-gradient(90deg, #3D5068, #2B4C8C, #1E7BC4);
           border-radius: 5pt; margin-top: 5pt;
         }
 
@@ -123,24 +134,24 @@ export default function PrintLayout({ children }: { children: React.ReactNode })
           gap: 14pt; margin-top: 18pt;
         }
         .signature-box {
-          border: 1pt solid #E8F0FD; border-radius: 5pt;
+          border: 1pt solid #ddeaf7; border-radius: 5pt;
           padding: 9pt; min-height: 55pt;
-          background: #F4F6FA;
+          background: #f5f8fc;
         }
         .signature-label { font-size: 7.5pt; color: #94a3b8; margin-bottom: 7pt; }
 
         /* ── Footer ── */
         .footer {
           margin-top: 18pt; padding-top: 9pt;
-          border-top: 1pt solid #E8F0FD;
+          border-top: 1pt solid #ddeaf7;
           text-align: center; font-size: 7.5pt; color: #94a3b8;
         }
 
         /* ── Conditions ── */
         .conditions {
-          margin-top: 12pt; padding: 9pt 10pt; background: #F4F6FA;
+          margin-top: 12pt; padding: 9pt 10pt; background: #f5f8fc;
           border-radius: 4pt; font-size: 8.5pt; color: #64748b;
-          border-left: 3pt solid #00C2FF;
+          border-left: 3pt solid #1E7BC4;
         }
       `}</style>
       {children}

@@ -26,12 +26,15 @@ interface LigneDevis {
 interface Devis {
   id: string
   numero: string
-  objet: string
+  objet?: string
   statut: string
   dureeEngagement?: number
   validite: number
   conditions?: string
   notes?: string
+  noteAbonnements?: string
+  noteLocation?: string
+  notePrestation?: string
   totalAbonnementHT: number
   totalPrestationsHT: number
   totalHT: number
@@ -71,8 +74,8 @@ export default function DevisDetailPage() {
           setEmailForm((prev) => ({
             ...prev,
             to: data.contact.email,
-            subject: `Devis ${data.numero} — ${data.objet}`,
-            message: `Bonjour ${data.contact.prenom},\n\nVeuillez trouver ci-joint notre devis ${data.numero} pour "${data.objet}".\n\nN'hésitez pas à nous contacter pour toute question.\n\nCordialement`,
+            subject: `Devis ${data.numero}`,
+            message: `Bonjour ${data.contact.prenom},\n\nVeuillez trouver ci-joint notre devis ${data.numero}.\n\nN'hésitez pas à nous contacter pour toute question.\n\nCordialement`,
           }))
         }
       })
@@ -183,7 +186,6 @@ export default function DevisDetailPage() {
               <h1 className="text-2xl font-bold text-slate-900 font-mono">{devis.numero}</h1>
               <StatutDevisBadge statut={devis.statut} />
             </div>
-            <p className="text-sm text-slate-500 mt-1">{devis.objet}</p>
           </div>
         </div>
 
@@ -293,7 +295,13 @@ export default function DevisDetailPage() {
               <div className="px-6 py-4 bg-[#0F2A6B]/5 border-b border-[#0F2A6B]/10">
                 <h3 className="text-sm font-semibold text-[#0F2A6B]">Abonnements services</h3>
               </div>
-              <LignesTable lignes={abonnementLignes} unite="/mois" />
+              <LignesTable lignes={abonnementLignes} />
+              {devis.noteAbonnements && (
+                <div className="px-6 py-3 bg-[#f0faff] border-t border-[#E8F0FD]">
+                  <p className="text-xs font-semibold text-[#1A5FBF] uppercase tracking-wide mb-1">Note</p>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{devis.noteAbonnements}</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -303,7 +311,13 @@ export default function DevisDetailPage() {
               <div className="px-6 py-4 bg-[#0F2A6B]/5 border-b border-[#0F2A6B]/10">
                 <h3 className="text-sm font-semibold text-[#0F2A6B]">Location de matériel</h3>
               </div>
-              <LignesTable lignes={locationLignes} unite="/mois" hidePrice />
+              <LignesTable lignes={locationLignes} hidePrice />
+              {devis.noteLocation && (
+                <div className="px-6 py-3 bg-[#f0faff] border-t border-[#E8F0FD]">
+                  <p className="text-xs font-semibold text-[#1A5FBF] uppercase tracking-wide mb-1">Note</p>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{devis.noteLocation}</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -314,6 +328,12 @@ export default function DevisDetailPage() {
                 <h3 className="text-sm font-semibold text-[#1C1C2E]">Prestations ponctuelles</h3>
               </div>
               <LignesTable lignes={prestationLignes} />
+              {devis.notePrestation && (
+                <div className="px-6 py-3 bg-[#f0faff] border-t border-[#E8F0FD]">
+                  <p className="text-xs font-semibold text-[#1A5FBF] uppercase tracking-wide mb-1">Note</p>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{devis.notePrestation}</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -333,7 +353,7 @@ export default function DevisDetailPage() {
               {devis.totalAbonnementHT > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Abonnements HT</span>
-                  <span className="font-medium">{formatMontant(devis.totalAbonnementHT)}/mois</span>
+                  <span className="font-medium">{formatMontant(devis.totalAbonnementHT)}</span>
                 </div>
               )}
               {devis.totalPrestationsHT > 0 && (
@@ -407,7 +427,7 @@ export default function DevisDetailPage() {
   )
 }
 
-function LignesTable({ lignes, unite, hidePrice }: { lignes: LigneDevis[]; unite?: string; hidePrice?: boolean }) {
+function LignesTable({ lignes, hidePrice }: { lignes: LigneDevis[]; hidePrice?: boolean }) {
   const sous_total = lignes.reduce((sum, l) => sum + l.totalHT, 0)
   return (
     <table className="w-full">
@@ -415,8 +435,8 @@ function LignesTable({ lignes, unite, hidePrice }: { lignes: LigneDevis[]; unite
         <tr className="bg-slate-50 border-b border-slate-100">
           <th className="text-left px-6 py-2.5 text-xs font-medium text-slate-500 uppercase">Désignation</th>
           <th className="text-center px-4 py-2.5 text-xs font-medium text-slate-500 uppercase">Qté</th>
-          {!hidePrice && <th className="text-right px-4 py-2.5 text-xs font-medium text-slate-500 uppercase">PU HT{unite}</th>}
-          <th className="text-right px-6 py-2.5 text-xs font-medium text-slate-500 uppercase">Total HT{unite}</th>
+          {!hidePrice && <th className="text-right px-4 py-2.5 text-xs font-medium text-slate-500 uppercase">PU HT</th>}
+          <th className="text-right px-6 py-2.5 text-xs font-medium text-slate-500 uppercase">Total HT</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-50">
@@ -433,7 +453,7 @@ function LignesTable({ lignes, unite, hidePrice }: { lignes: LigneDevis[]; unite
         ))}
         <tr className="border-t-2 border-[#0F2A6B]/20 bg-[#0F2A6B]/5">
           <td colSpan={hidePrice ? 2 : 3} className="px-6 py-2.5 text-right text-xs text-slate-500 italic">
-            Sous-total{unite}
+            Sous-total
           </td>
           <td className="px-6 py-2.5 text-right text-sm font-bold text-[#0F2A6B]">{formatMontant(sous_total)}</td>
         </tr>

@@ -10,7 +10,7 @@ import { formatMontant, formatDate } from '@/lib/utils'
 interface Devis {
   id: string
   numero: string
-  objet: string
+  objet?: string
   statut: string
   totalTTC: number
   totalAbonnementHT: number
@@ -125,7 +125,6 @@ export default function DevisPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 hidden lg:table-cell">
-                    <p className="text-sm text-slate-700 truncate max-w-xs">{d.objet}</p>
                     {d.dureeEngagement && (
                       <p className="text-xs text-slate-400">{d.dureeEngagement} mois</p>
                     )}
@@ -133,7 +132,7 @@ export default function DevisPage() {
                   <td className="px-6 py-4 hidden md:table-cell text-right">
                     <p className="text-sm font-semibold text-slate-900">{formatMontant(d.totalTTC)}</p>
                     {d.totalAbonnementHT > 0 && (
-                      <p className="text-xs text-slate-400">{formatMontant(d.totalAbonnementHT)}/mois</p>
+                      <p className="text-xs text-slate-400">{formatMontant(d.totalAbonnementHT)}</p>
                     )}
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">

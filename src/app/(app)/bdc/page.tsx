@@ -118,7 +118,7 @@ export default function BdcPage() {
                   <td className="px-6 py-4 hidden md:table-cell text-right">
                     <p className="text-sm font-semibold text-slate-900">{formatMontant(b.totalTTC)}</p>
                     {b.totalAbonnementHT > 0 && (
-                      <p className="text-xs text-slate-400">{formatMontant(b.totalAbonnementHT)}/mois</p>
+                      <p className="text-xs text-slate-400">{formatMontant(b.totalAbonnementHT)}</p>
                     )}
                   </td>
                   <td className="px-6 py-4 hidden md:table-cell">

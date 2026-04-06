@@ -6,14 +6,12 @@
 
 /* ─── BECALL Design System ─────────────────────────────────────────
    Palette
-   --night:      #0F2A6B   Bleu nuit  · fond sombre, titres
-   --corporate:  #1A5FBF   Bleu corp  · CTA principal
-   --cyan:       #00C2FF   Cyan tech  · accent, dégradé
-   --green:      #00E5A0   Vert dig.  · succès, secondaire
-   --pale:       #E8F0FD   Bleu pâle  · fond sections claires
-   --pearl:      #F4F6FA   Gris perle · fond app, cards
-   --dark:       #1C1C2E   Anthracite · fond dark premium
-   --white:      #FFFFFF   Blanc pur  · docs, print
+   --electric:  #007BFF   Bleu Électrique · CTA, accents, icônes actives
+   --slate:     #2C3E50   Gris Ardoise    · sidebar, titres, texte fort
+   --pale:      #EEF5FF   Bleu pâle       · fond sections claires
+   --pearl:     #F4F6FA   Gris perle      · fond app, cards
+   --dark:      #1C1C2E   Anthracite      · corps de texte
+   --white:     #FFFFFF   Blanc pur       · docs, print
 ──────────────────────────────────────────────────────────────────── */
 
 @layer base {
@@ -34,26 +32,26 @@
 @layer components {
   /* ── Page layout ── */
   .page-header   { @apply mb-8; }
-  .page-title    { font-size: 22px; font-weight: 700; color: #0F2A6B; letter-spacing: -0.02em; }
+  .page-title    { font-size: 22px; font-weight: 700; color: #2C3E50; letter-spacing: -0.02em; }
   .page-subtitle { @apply text-sm mt-1; color: #64748b; }
 
   /* ── Cards / Sections ── */
   .form-section {
     background: #ffffff;
     border-radius: 12px;
-    border: 1px solid #E8F0FD;
+    border: 1px solid #EEF5FF;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(15, 42, 107, 0.04);
+    box-shadow: 0 1px 3px rgba(44, 62, 80, 0.06);
   }
   .form-section-title {
     font-size: 13px;
     font-weight: 600;
-    color: #0F2A6B;
+    color: #2C3E50;
     letter-spacing: -0.01em;
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #E8F0FD;
+    border-bottom: 1px solid #EEF5FF;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
@@ -64,14 +62,14 @@
   .stat-card {
     background: #ffffff;
     border-radius: 12px;
-    border: 1px solid #E8F0FD;
+    border: 1px solid #EEF5FF;
     padding: 20px 24px;
-    box-shadow: 0 1px 3px rgba(15, 42, 107, 0.04);
+    box-shadow: 0 1px 3px rgba(44, 62, 80, 0.06);
   }
   .stat-card-value {
     font-size: 28px;
     font-weight: 700;
-    color: #0F2A6B;
+    color: #2C3E50;
     letter-spacing: -0.03em;
   }
   .stat-card-label {
@@ -86,7 +84,7 @@
   .becall-bar {
     height: 3px;
     border-radius: 2px;
-    background: linear-gradient(90deg, #0F2A6B 0%, #1A5FBF 40%, #00C2FF 75%, #00E5A0 100%);
+    background: linear-gradient(90deg, #2C3E50 0%, #007BFF 100%);
   }
 }
 

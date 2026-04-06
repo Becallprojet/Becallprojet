@@ -29,25 +29,25 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: 'linear-gradient(145deg, #0F2A6B 0%, #1A5FBF 55%, #0d3b8a 100%)' }}
+      style={{ background: 'linear-gradient(145deg, #1a2d3f 0%, #2C3E50 55%, #1a2d3f 100%)' }}
     >
       {/* Background decorative circles */}
       <div style={{
         position: 'absolute', top: '-80px', right: '-80px',
         width: '400px', height: '400px', borderRadius: '50%',
-        border: '1px solid rgba(0,194,255,0.12)',
+        border: '1px solid rgba(0,123,255,0.12)',
         pointerEvents: 'none',
       }} />
       <div style={{
         position: 'absolute', top: '-40px', right: '-40px',
         width: '240px', height: '240px', borderRadius: '50%',
-        border: '1px solid rgba(0,194,255,0.18)',
+        border: '1px solid rgba(0,123,255,0.18)',
         pointerEvents: 'none',
       }} />
       <div style={{
         position: 'absolute', bottom: '-100px', left: '-60px',
         width: '320px', height: '320px', borderRadius: '50%',
-        border: '1px solid rgba(0,229,160,0.1)',
+        border: '1px solid rgba(0,123,255,0.1)',
         pointerEvents: 'none',
       }} />
 
@@ -57,18 +57,18 @@ export default function LoginPage() {
           style={{
             background: '#ffffff',
             borderRadius: '16px',
-            boxShadow: '0 24px 64px rgba(15,42,107,0.28)',
+            boxShadow: '0 24px 64px rgba(44,62,80,0.32)',
             overflow: 'hidden',
           }}
         >
           {/* Logo zone */}
-          <div style={{ padding: '32px 32px 24px', borderBottom: '1px solid #E8F0FD', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ padding: '32px 32px 24px', borderBottom: '1px solid #EEF5FF', display: 'flex', justifyContent: 'center' }}>
             <Image src="/logo.png" alt="BECALL" width={160} height={107} className="object-contain" />
           </div>
 
           {/* Form */}
           <div style={{ padding: '28px 32px 32px' }}>
-            <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#0F2A6B', letterSpacing: '-0.02em', marginBottom: '4px' }}>
+            <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#2C3E50', letterSpacing: '-0.02em', marginBottom: '4px' }}>
               Connexion
             </h1>
             <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '24px' }}>
@@ -89,12 +89,12 @@ export default function LoginPage() {
                   placeholder="votre@email.com"
                   style={{
                     width: '100%', padding: '10px 14px', fontSize: '14px',
-                    border: '1px solid #d0dff5', borderRadius: '8px',
+                    border: '1px solid #c8deff', borderRadius: '8px',
                     outline: 'none', transition: 'all 0.15s',
                     color: '#1C1C2E', background: '#fff',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#1A5FBF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(26,95,191,0.12)' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = '#d0dff5'; e.currentTarget.style.boxShadow = 'none' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#007BFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.12)' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#c8deff'; e.currentTarget.style.boxShadow = 'none' }}
                 />
               </div>
 
@@ -110,12 +110,12 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   style={{
                     width: '100%', padding: '10px 14px', fontSize: '14px',
-                    border: '1px solid #d0dff5', borderRadius: '8px',
+                    border: '1px solid #c8deff', borderRadius: '8px',
                     outline: 'none', transition: 'all 0.15s',
                     color: '#1C1C2E', background: '#fff',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = '#1A5FBF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(26,95,191,0.12)' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = '#d0dff5'; e.currentTarget.style.boxShadow = 'none' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#007BFF'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,123,255,0.12)' }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#c8deff'; e.currentTarget.style.boxShadow = 'none' }}
                 />
               </div>
 
@@ -131,12 +131,12 @@ export default function LoginPage() {
                 style={{
                   width: '100%', padding: '11px', fontSize: '14px', fontWeight: 600,
                   color: 'white', borderRadius: '8px', border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-                  background: loading ? '#94a3b8' : '#1A5FBF',
+                  background: loading ? '#94a3b8' : '#007BFF',
                   transition: 'all 0.15s', marginTop: '4px',
-                  boxShadow: loading ? 'none' : '0 4px 12px rgba(26,95,191,0.3)',
+                  boxShadow: loading ? 'none' : '0 4px 12px rgba(0,123,255,0.3)',
                 }}
-                onMouseEnter={e => { if (!loading) { (e.currentTarget as HTMLElement).style.background = '#0F2A6B'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(15,42,107,0.35)' } }}
-                onMouseLeave={e => { if (!loading) { (e.currentTarget as HTMLElement).style.background = '#1A5FBF'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(26,95,191,0.3)' } }}
+                onMouseEnter={e => { if (!loading) { (e.currentTarget as HTMLElement).style.background = '#0066d6'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,102,214,0.35)' } }}
+                onMouseLeave={e => { if (!loading) { (e.currentTarget as HTMLElement).style.background = '#007BFF'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px rgba(0,123,255,0.3)' } }}
               >
                 {loading ? 'Connexion en cours…' : 'Se connecter'}
               </button>
@@ -144,7 +144,7 @@ export default function LoginPage() {
           </div>
 
           {/* Gradient bar */}
-          <div style={{ height: '3px', background: 'linear-gradient(90deg, #0F2A6B, #1A5FBF, #00C2FF, #00E5A0)' }} />
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, #2C3E50, #007BFF)' }} />
         </div>
 
         <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>

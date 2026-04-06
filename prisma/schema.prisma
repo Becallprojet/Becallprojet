@@ -76,7 +76,7 @@ model Prestation {
 model Devis {
   id                 String    @id @default(cuid())
   numero             String    @unique
-  objet              String
+  objet              String?
   statut             String    @default("BROUILLON")
   contactId          String
   contact            Contact   @relation(fields: [contactId], references: [id])
@@ -84,6 +84,9 @@ model Devis {
   validite           Int       @default(30)
   conditions         String?
   notes              String?
+  noteAbonnements    String?
+  noteLocation       String?
+  notePrestation     String?
   totalAbonnementHT  Float     @default(0)
   totalPrestationsHT Float     @default(0)
   totalHT            Float     @default(0)
@@ -132,11 +135,22 @@ model BonDeCommande {
   tva                Float
   totalTTC           Float
   notes              String?
+  noteAbonnements    String?
+  noteLocation       String?
+  notePrestation     String?
   dateLivraison      DateTime?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
   lignes LigneBdc[]
+}
+
+model PhraseNote {
+  id        String   @id @default(cuid())
+  texte     String
+  ordre     Int      @default(0)
+  actif     Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 model LigneBdc {

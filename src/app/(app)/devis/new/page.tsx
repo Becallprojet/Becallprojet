@@ -28,6 +28,7 @@ export default function DevisNewPage() {
   const [abonnements, setAbonnements] = useState<Abonnement[]>([])
   const [locations, setLocations] = useState<Abonnement[]>([])
   const [prestations, setPrestations] = useState<Prestation[]>([])
+  const [phrases, setPhrases] = useState<{ id: string; texte: string }[]>([])
   const [lignes, setLignes] = useState<LigneInput[]>([])
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
@@ -36,11 +37,13 @@ export default function DevisNewPage() {
 
   const [form, setForm] = useState({
     contactId: preselectedContactId,
-    objet: '',
     dureeEngagement: '36',
     validite: '30',
     conditions: "Devis valable 30 jours à compter de sa date d'émission.",
     notes: '',
+    noteAbonnements: '',
+    noteLocation: '',
+    notePrestation: '',
   })
 
   const set = (field: string, value: string) =>
@@ -52,11 +55,13 @@ export default function DevisNewPage() {
       fetch('/api/catalogue/abonnements?categorie=ABONNEMENT').then((r) => r.json()),
       fetch('/api/catalogue/abonnements?categorie=LOCATION').then((r) => r.json()),
       fetch('/api/catalogue/prestations').then((r) => r.json()),
-    ]).then(([c, a, l, p]) => {
+      fetch('/api/catalogue/phrases').then((r) => r.json()),
+    ]).then(([c, a, l, p, ph]) => {
       setContacts(Array.isArray(c) ? c : [])
       setAbonnements(Array.isArray(a) ? a : [])
       setLocations(Array.isArray(l) ? l : [])
       setPrestations(Array.isArray(p) ? p : [])
+      setPhrases(Array.isArray(ph) ? ph : [])
     })
   }, [])
 
@@ -124,7 +129,6 @@ export default function DevisNewPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.contactId) { alert('Veuillez sélectionner un contact.'); return }
-    if (!form.objet) { alert('Veuillez saisir un objet.'); return }
 
     setLoading(true)
     try {
@@ -204,13 +208,6 @@ export default function DevisNewPage() {
                     ))}
                   </select>
                 </div>
-                <Input
-                  label="Objet du devis *"
-                  value={form.objet}
-                  onChange={(e) => set('objet', e.target.value)}
-                  placeholder="Ex: Mise en place infrastructure réseau"
-                  required
-                />
                 <Select
                   label="Durée d'engagement"
                   value={form.dureeEngagement}
@@ -235,7 +232,7 @@ export default function DevisNewPage() {
                   Abonnements services
                   {abonnementLignes.length > 0 && (
                     <span className="ml-2 text-sm font-normal text-slate-500">
-                      ({formatMontant(totaux.totalAbonnementHT - lignes.filter(l => l.type === 'LOCATION').reduce((s, l) => s + l.totalHT, 0))}/mois HT)
+                      ({formatMontant(totaux.totalAbonnementHT - lignes.filter(l => l.type === 'LOCATION').reduce((s, l) => s + l.totalHT, 0))} HT)
                     </span>
                   )}
                 </h2>
@@ -254,8 +251,41 @@ export default function DevisNewPage() {
                   <p className="text-sm text-slate-400">Cliquer pour ajouter un abonnement service</p>
                 </div>
               ) : (
-                <LignesSection lignes={abonnementLignes} onUpdate={updateLigne} onRemove={removeLigne} showUnite="/mois" />
+                <LignesSection lignes={abonnementLignes} onUpdate={updateLigne} onRemove={removeLigne} />
               )}
+
+              {/* Note abonnements */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Note client (visible sur le devis)</label>
+                {phrases.length > 0 && (
+                  <div className="mb-2 space-y-1.5">
+                    {phrases.map((ph) => (
+                      <label key={ph.id} className="flex items-start gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 rounded border-[#d0dff5] accent-[#1A5FBF]"
+                          onChange={(e) => {
+                            const cur = form.noteAbonnements
+                            if (e.target.checked) {
+                              set('noteAbonnements', cur ? `${cur}\n${ph.texte}` : ph.texte)
+                            } else {
+                              set('noteAbonnements', cur.replace(`\n${ph.texte}`, '').replace(ph.texte, '').trim())
+                            }
+                          }}
+                        />
+                        <span className="text-sm text-slate-600 group-hover:text-[#0F2A6B]">{ph.texte}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  value={form.noteAbonnements}
+                  onChange={(e) => set('noteAbonnements', e.target.value)}
+                  rows={2}
+                  placeholder="Note libre visible par le client sous cette section…"
+                  className="w-full px-3 py-2 text-sm border border-[#d0dff5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1A5FBF]/30 focus:border-[#1A5FBF] resize-none text-[#1C1C2E] placeholder-slate-400"
+                />
+              </div>
             </div>
 
             {/* Location de matériel */}
@@ -265,7 +295,7 @@ export default function DevisNewPage() {
                   Location de matériel
                   {locationLignes.length > 0 && (
                     <span className="ml-2 text-sm font-normal text-slate-500">
-                      ({formatMontant(locationLignes.reduce((s, l) => s + l.totalHT, 0))}/mois HT)
+                      ({formatMontant(locationLignes.reduce((s, l) => s + l.totalHT, 0))} HT)
                     </span>
                   )}
                 </h2>
@@ -284,8 +314,41 @@ export default function DevisNewPage() {
                   <p className="text-sm text-slate-400">Cliquer pour ajouter une location de matériel</p>
                 </div>
               ) : (
-                <LignesSection lignes={locationLignes} onUpdate={updateLigne} onRemove={removeLigne} showUnite="/mois" />
+                <LignesSection lignes={locationLignes} onUpdate={updateLigne} onRemove={removeLigne} />
               )}
+
+              {/* Note location */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Note client (visible sur le devis)</label>
+                {phrases.length > 0 && (
+                  <div className="mb-2 space-y-1.5">
+                    {phrases.map((ph) => (
+                      <label key={ph.id} className="flex items-start gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 rounded border-[#d0dff5] accent-[#1A5FBF]"
+                          onChange={(e) => {
+                            const cur = form.noteLocation
+                            if (e.target.checked) {
+                              set('noteLocation', cur ? `${cur}\n${ph.texte}` : ph.texte)
+                            } else {
+                              set('noteLocation', cur.replace(`\n${ph.texte}`, '').replace(ph.texte, '').trim())
+                            }
+                          }}
+                        />
+                        <span className="text-sm text-slate-600 group-hover:text-[#0F2A6B]">{ph.texte}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  value={form.noteLocation}
+                  onChange={(e) => set('noteLocation', e.target.value)}
+                  rows={2}
+                  placeholder="Note libre visible par le client sous cette section…"
+                  className="w-full px-3 py-2 text-sm border border-[#d0dff5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1A5FBF]/30 focus:border-[#1A5FBF] resize-none text-[#1C1C2E] placeholder-slate-400"
+                />
+              </div>
             </div>
 
             {/* Prestations */}
@@ -316,11 +379,44 @@ export default function DevisNewPage() {
               ) : (
                 <LignesSection lignes={prestationLignes} onUpdate={updateLigne} onRemove={removeLigne} />
               )}
+
+              {/* Note prestation */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Note client (visible sur le devis)</label>
+                {phrases.length > 0 && (
+                  <div className="mb-2 space-y-1.5">
+                    {phrases.map((ph) => (
+                      <label key={ph.id} className="flex items-start gap-2 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 rounded border-[#d0dff5] accent-[#1A5FBF]"
+                          onChange={(e) => {
+                            const cur = form.notePrestation
+                            if (e.target.checked) {
+                              set('notePrestation', cur ? `${cur}\n${ph.texte}` : ph.texte)
+                            } else {
+                              set('notePrestation', cur.replace(`\n${ph.texte}`, '').replace(ph.texte, '').trim())
+                            }
+                          }}
+                        />
+                        <span className="text-sm text-slate-600 group-hover:text-[#0F2A6B]">{ph.texte}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  value={form.notePrestation}
+                  onChange={(e) => set('notePrestation', e.target.value)}
+                  rows={2}
+                  placeholder="Note libre visible par le client sous cette section…"
+                  className="w-full px-3 py-2 text-sm border border-[#d0dff5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1A5FBF]/30 focus:border-[#1A5FBF] resize-none text-[#1C1C2E] placeholder-slate-400"
+                />
+              </div>
             </div>
 
             {/* Conditions */}
             <div className="form-section">
-              <h2 className="form-section-title">Conditions et notes</h2>
+              <h2 className="form-section-title">Conditions et notes internes</h2>
               <div className="space-y-4">
                 <Textarea
                   label="Conditions"
@@ -348,13 +444,13 @@ export default function DevisNewPage() {
                   {abonnementLignes.length > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-600">Abonnements services HT</span>
-                      <span className="font-medium">{formatMontant(abonnementLignes.reduce((s, l) => s + l.totalHT, 0))}/mois</span>
+                      <span className="font-medium">{formatMontant(abonnementLignes.reduce((s, l) => s + l.totalHT, 0))}</span>
                     </div>
                   )}
                   {locationLignes.length > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-600">Location matériel HT</span>
-                      <span className="font-medium">{formatMontant(locationLignes.reduce((s, l) => s + l.totalHT, 0))}/mois</span>
+                      <span className="font-medium">{formatMontant(locationLignes.reduce((s, l) => s + l.totalHT, 0))}</span>
                     </div>
                   )}
                   {prestationLignes.length > 0 && (
@@ -426,7 +522,6 @@ export default function DevisNewPage() {
                 <div className="text-right flex-shrink-0 ml-4">
                   <p className="text-sm font-semibold text-slate-900">
                     {formatMontant(item.prixHT)}
-                    {modalSection !== 'PRESTATION' && <span className="text-xs font-normal text-slate-500">/mois</span>}
                   </p>
                 </div>
               </button>
@@ -456,19 +551,17 @@ function LignesSection({
   lignes,
   onUpdate,
   onRemove,
-  showUnite,
 }: {
   lignes: LigneInput[]
   onUpdate: (tempId: string, field: string, value: string | number) => void
   onRemove: (tempId: string) => void
-  showUnite?: string
 }) {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-12 gap-2 px-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
         <span className="col-span-5">Désignation</span>
         <span className="col-span-2 text-center">Qté</span>
-        <span className="col-span-2 text-right">PU HT{showUnite}</span>
+        <span className="col-span-2 text-right">PU HT</span>
         <span className="col-span-2 text-right">Total HT</span>
         <span className="col-span-1" />
       </div>

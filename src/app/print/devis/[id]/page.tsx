@@ -22,7 +22,6 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
   const companyName = process.env.COMPANY_NAME || 'BECALL'
   const companyAddress = process.env.COMPANY_ADDRESS || ''
   const companyPhone = process.env.COMPANY_PHONE || ''
-  const companyEmail = process.env.COMPANY_EMAIL || ''
   const companySiret = process.env.COMPANY_SIRET || ''
   const companyTva = process.env.COMPANY_TVA || ''
 
@@ -36,25 +35,22 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
     <>
       <PrintButton downloadUrl={`/api/pdf/devis/${id}`} />
 
+      {/* Logo centré en haut de page */}
+      <div className="logo-top">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${appUrl}/logo.png`} alt="BECALL" className="logo-img" />
+      </div>
+
       <div className="gradient-bar" />
 
       <div className="header">
-        <div className="logo-wrap">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`${appUrl}/logo.png`} alt="BECALL" className="logo-img" />
-          <div className="company-info">
-            {companyAddress && <div>{companyAddress}</div>}
-            {companyPhone && <div>{companyPhone}</div>}
-            {companyEmail && <div>{companyEmail}</div>}
-            {companySiret && <div>SIRET : {companySiret}</div>}
-            {companyTva && <div>TVA : {companyTva}</div>}
-          </div>
+        <div className="company-info">
+          {companyAddress && <div>{companyAddress}</div>}
+          {companyPhone && <div>{companyPhone}</div>}
+          {companySiret && <div>SIRET : {companySiret}</div>}
+          {companyTva && <div>TVA : {companyTva}</div>}
         </div>
-        <div className="doc-title">
-          <div className="doc-label">Devis</div>
-          <div className="doc-number">{devis.numero}</div>
-          <div className={`doc-status status-${devis.statut}`}>{statutLabels[devis.statut] ?? devis.statut}</div>
-        </div>
+        <div className="doc-title" />
       </div>
 
       <div className="parties">
@@ -62,7 +58,6 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
           <div className="party-label">Émetteur</div>
           <div className="party-name">{companyName}</div>
           {companyAddress && <div className="party-line">{companyAddress}</div>}
-          {companyEmail && <div className="party-line">{companyEmail}</div>}
           {companyPhone && <div className="party-line">{companyPhone}</div>}
         </div>
         <div className="party-box">
@@ -72,7 +67,6 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
             {devis.contact.prenom} {devis.contact.nom}
             {devis.contact.poste && ` — ${devis.contact.poste}`}
           </div>
-          <div className="party-line">{devis.contact.email}</div>
           {devis.contact.telephoneMobile && <div className="party-line">{devis.contact.telephoneMobile}</div>}
           {devis.contact.adresseFacturation && <div className="party-line" style={{ marginTop: '4pt' }}>{devis.contact.adresseFacturation}</div>}
           {(devis.contact.codePostal || devis.contact.ville) && (
@@ -83,8 +77,8 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
 
       <div className="meta">
         <div className="meta-item">
-          <div className="meta-label">Objet</div>
-          <div className="meta-value" style={{ fontSize: '9pt' }}>{devis.objet}</div>
+          <div className="meta-label">Numéro</div>
+          <div className="meta-value">{devis.numero}</div>
         </div>
         <div className="meta-item">
           <div className="meta-label">Date</div>
@@ -102,13 +96,13 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
 
       {abonnementLignes.length > 0 && (
         <>
-          <div className="section-title section-abo">Abonnements services (récurrent / mois)</div>
+          <div className="section-title section-abo">Abonnements services</div>
           <table>
             <thead><tr>
               <th style={{ width: '50%' }}>Désignation</th>
               <th className="right" style={{ width: '10%' }}>Qté</th>
-              <th className="right" style={{ width: '20%' }}>PU HT / mois</th>
-              <th className="right" style={{ width: '20%' }}>Total HT / mois</th>
+              <th className="right" style={{ width: '20%' }}>PU HT</th>
+              <th className="right" style={{ width: '20%' }}>Total HT</th>
             </tr></thead>
             <tbody>
               {abonnementLignes.map((l) => (
@@ -119,27 +113,32 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
                   <td className="right" style={{ fontWeight: 600 }}>{formatMontant(l.totalHT)}</td>
                 </tr>
               ))}
-              <tr style={{ borderTop: '2pt solid #1B3A6B' }}>
+              <tr style={{ borderTop: '2pt solid #3D5068' }}>
                 <td colSpan={3} style={{ textAlign: 'right', paddingRight: '8pt', fontSize: '8.5pt', color: '#475569', fontStyle: 'italic' }}>
-                  Sous-total abonnements / mois
+                  Sous-total abonnements
                 </td>
-                <td className="right" style={{ fontWeight: 700, color: '#1B3A6B' }}>
+                <td className="right" style={{ fontWeight: 700, color: '#3D5068' }}>
                   {formatMontant(abonnementLignes.reduce((s, l) => s + l.totalHT, 0))}
                 </td>
               </tr>
             </tbody>
           </table>
+          {devis.noteAbonnements && (
+            <div style={{ margin: '6pt 0 0 0', padding: '6pt 10pt', background: '#ddeaf7', borderLeft: '3pt solid #1E7BC4', borderRadius: '3pt', fontSize: '8.5pt', color: '#1C1C2E', whiteSpace: 'pre-wrap' }}>
+              <strong style={{ color: '#1E7BC4' }}>Note : </strong>{devis.noteAbonnements}
+            </div>
+          )}
         </>
       )}
 
       {locationLignes.length > 0 && (
         <>
-          <div className="section-title section-abo" style={{ marginTop: abonnementLignes.length ? '12pt' : '0' }}>Location de matériel (récurrent / mois)</div>
+          <div className="section-title section-abo" style={{ marginTop: abonnementLignes.length ? '12pt' : '0' }}>Location de matériel</div>
           <table>
             <thead><tr>
               <th style={{ width: '60%' }}>Désignation</th>
               <th className="right" style={{ width: '10%' }}>Qté</th>
-              <th className="right" style={{ width: '30%' }}>Total HT / mois</th>
+              <th className="right" style={{ width: '30%' }}>Total HT</th>
             </tr></thead>
             <tbody>
               {locationLignes.map((l) => (
@@ -149,23 +148,28 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
                   <td className="right" style={{ color: '#94a3b8', fontSize: '8pt' }}>—</td>
                 </tr>
               ))}
-              <tr style={{ borderTop: '2pt solid #1B3A6B' }}>
+              <tr style={{ borderTop: '2pt solid #3D5068' }}>
                 <td colSpan={2} style={{ textAlign: 'right', paddingRight: '8pt', fontSize: '8.5pt', color: '#475569', fontStyle: 'italic' }}>
-                  Sous-total location / mois
+                  Sous-total location
                 </td>
-                <td className="right" style={{ fontWeight: 700, color: '#1B3A6B' }}>
+                <td className="right" style={{ fontWeight: 700, color: '#3D5068' }}>
                   {formatMontant(locationLignes.reduce((s, l) => s + l.totalHT, 0))}
                 </td>
               </tr>
             </tbody>
           </table>
+          {devis.noteLocation && (
+            <div style={{ margin: '6pt 0 0 0', padding: '6pt 10pt', background: '#ddeaf7', borderLeft: '3pt solid #1E7BC4', borderRadius: '3pt', fontSize: '8.5pt', color: '#1C1C2E', whiteSpace: 'pre-wrap' }}>
+              <strong style={{ color: '#1E7BC4' }}>Note : </strong>{devis.noteLocation}
+            </div>
+          )}
         </>
       )}
 
       {prestationLignes.length > 0 && (
         <>
-          <div className="section-title section-prest" style={{ marginTop: (abonnementLignes.length || locationLignes.length) ? '12pt' : '0' }}>
-            Prestations ponctuelles (frais uniques)
+          <div className="section-title section-abo" style={{ marginTop: (abonnementLignes.length || locationLignes.length) ? '12pt' : '0' }}>
+            Prestations ponctuelles
           </div>
           <table>
             <thead><tr>
@@ -183,16 +187,21 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
                   <td className="right" style={{ fontWeight: 600 }}>{formatMontant(l.totalHT)}</td>
                 </tr>
               ))}
-              <tr style={{ borderTop: '2pt solid #1B3A6B' }}>
+              <tr style={{ borderTop: '2pt solid #3D5068' }}>
                 <td colSpan={3} style={{ textAlign: 'right', paddingRight: '8pt', fontSize: '8.5pt', color: '#475569', fontStyle: 'italic' }}>
                   Sous-total prestations
                 </td>
-                <td className="right" style={{ fontWeight: 700, color: '#1B3A6B' }}>
+                <td className="right" style={{ fontWeight: 700, color: '#3D5068' }}>
                   {formatMontant(prestationLignes.reduce((s, l) => s + l.totalHT, 0))}
                 </td>
               </tr>
             </tbody>
           </table>
+          {devis.notePrestation && (
+            <div style={{ margin: '6pt 0 0 0', padding: '6pt 10pt', background: '#ddeaf7', borderLeft: '3pt solid #1E7BC4', borderRadius: '3pt', fontSize: '8.5pt', color: '#1C1C2E', whiteSpace: 'pre-wrap' }}>
+              <strong style={{ color: '#1E7BC4' }}>Note : </strong>{devis.notePrestation}
+            </div>
+          )}
         </>
       )}
 
@@ -200,7 +209,7 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
         <div className="totals">
           {devis.totalAbonnementHT > 0 && (
             <div className="totals-row">
-              <span style={{ color: '#64748b' }}>Abonnements HT / mois</span>
+              <span style={{ color: '#64748b' }}>Abonnements HT</span>
               <span style={{ fontWeight: 600 }}>{formatMontant(devis.totalAbonnementHT)}</span>
             </div>
           )}
@@ -236,14 +245,12 @@ export default async function PrintDevisPage({ params }: { params: Promise<{ id:
         </div>
         <div className="signature-box">
           <div className="signature-label">Émis par</div>
-          <div style={{ fontSize: '9pt', fontWeight: 600, color: '#1B3A6B' }}>{companyName}</div>
-          {companyEmail && <div style={{ fontSize: '8.5pt', color: '#64748b', marginTop: '3pt' }}>{companyEmail}</div>}
+          <div style={{ fontSize: '9pt', fontWeight: 600, color: '#3D5068' }}>{companyName}</div>
         </div>
       </div>
 
       <div className="footer">
-        <div className="gradient-bar" style={{ marginBottom: '6pt' }} />
-        <p>{companyName}{companyEmail ? ` — ${companyEmail}` : ''}{companySiret ? ` — SIRET ${companySiret}` : ''}</p>
+        <p>{companyName}{companySiret ? ` — SIRET ${companySiret}` : ''}</p>
       </div>
     </>
   )
