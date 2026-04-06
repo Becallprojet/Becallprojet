@@ -1,7 +1,7 @@
 export type StatutContact = 'PROSPECT' | 'CLIENT'
 export type StatutDevis = 'BROUILLON' | 'ENVOYE' | 'ACCEPTE' | 'REFUSE'
 export type StatutBdc = 'EN_COURS' | 'LIVRE' | 'ANNULE'
-export type TypeLigne = 'ABONNEMENT' | 'PRESTATION'
+export type TypeLigne = 'ABONNEMENT' | 'PRESTATION' | 'LOCATION'
 export type TypeAbonnement = 'MATERIEL' | 'OPERATEUR' | 'PRESTATION' | 'MAINTENANCE'
 
 export interface LigneInput {
