@@ -20,7 +20,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       printBackground: true,
     })
 
-    return new NextResponse(pdf, {
+    return new NextResponse(Buffer.from(pdf), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="devis-${id}.pdf"`,
