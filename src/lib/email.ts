@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { formatMontant, formatDate } from './utils'
+import { sendEmailViaGmail } from './gmail'
 
 export const runtime = 'nodejs'
 
@@ -23,6 +24,7 @@ export interface SendEmailOptions {
   documentId: string
   documentNumero: string
   documentData: Record<string, unknown>
+  userId?: string
 }
 
 function generateDocumentHtml(
@@ -113,6 +115,22 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
       ${htmlDocument}
     </div>`
 
+  // Attempt to send via Gmail API when a userId is provided
+  if (options.userId) {
+    try {
+      await sendEmailViaGmail(options.userId, {
+        to: options.to,
+        subject: options.subject,
+        html: messageHtml,
+        from: process.env.SMTP_FROM,
+      })
+      return
+    } catch (err) {
+      console.warn('[email] Gmail API failed, falling back to SMTP:', err)
+    }
+  }
+
+  // Fallback: Nodemailer SMTP
   const transporter = getTransporter()
 
   await transporter.sendMail({

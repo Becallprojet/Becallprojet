@@ -34,7 +34,7 @@ function ParametresPageInner() {
   useEffect(() => {
     if (searchParams.get('googleConnected') === 'true') {
       setGoogleConnected(true)
-      setNotification({ type: 'success', message: 'Google Calendar connecté avec succès !' })
+      setNotification({ type: 'success', message: 'Google Calendar et Gmail connectés avec succès !' })
     } else if (searchParams.get('googleError')) {
       setNotification({ type: 'error', message: 'Erreur lors de la connexion à Google Calendar.' })
     }
@@ -103,7 +103,7 @@ function ParametresPageInner() {
           <p className="text-sm text-slate-500 mt-0.5">Connectez vos outils externes au CRM.</p>
         </div>
 
-        {/* Google Calendar */}
+        {/* Google Calendar + Gmail */}
         <div className="px-6 py-5 border-b border-slate-100">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -111,18 +111,24 @@ function ParametresPageInner() {
                 <Calendar size={18} className="text-blue-600" />
               </div>
               <div>
-                <p className="font-medium text-slate-900 text-sm">Google Calendar</p>
+                <p className="font-medium text-slate-900 text-sm">Google Calendar &amp; Gmail</p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Synchronisez automatiquement vos rendez-vous avec Google Calendar.
+                  Synchronisez vos rendez-vous avec Google Calendar et envoyez vos devis/BDC via Gmail.
                 </p>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {googleConnected === null ? (
                     <span className="text-xs text-slate-400">Chargement...</span>
                   ) : googleConnected ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
-                      <CheckCircle size={11} />
-                      Connecté
-                    </span>
+                    <>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                        <CheckCircle size={11} />
+                        Google Calendar activé
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                        <CheckCircle size={11} />
+                        Gmail activé
+                      </span>
+                    </>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
                       <XCircle size={11} />
@@ -147,7 +153,7 @@ function ParametresPageInner() {
               ) : (
                 <a href="/api/google/connect">
                   <Button variant="secondary" size="sm">
-                    Connecter Google Calendar
+                    Connecter Google
                   </Button>
                 </a>
               )}

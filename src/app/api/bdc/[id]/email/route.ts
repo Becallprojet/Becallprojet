@@ -1,11 +1,14 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDocumentEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getServerSession(authOptions)
     const { id } = await params
     const body = await request.json()
     const { to, subject, message } = body
@@ -34,6 +37,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       documentId: id,
       documentNumero: bdc.numero,
       documentData: bdc as unknown as Record<string, unknown>,
+      userId: (session?.user as { id?: string } | undefined)?.id,
     })
 
     if (bdc.statut === 'EN_COURS') {
