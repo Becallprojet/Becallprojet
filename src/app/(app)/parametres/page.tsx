@@ -1,11 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Settings, Calendar, Zap, CheckCircle, XCircle, Copy, Check } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
 export default function ParametresPage() {
+  return (
+    <Suspense fallback={null}>
+      <ParametresPageInner />
+    </Suspense>
+  )
+}
+
+function ParametresPageInner() {
   const searchParams = useSearchParams()
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
