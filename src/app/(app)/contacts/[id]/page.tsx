@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Edit, Plus, Phone, Mail, MapPin, Building2, FileText, ClipboardList, Trash2, Bell, Clock, CheckCircle2, CalendarPlus, Sparkles, Copy, Check } from 'lucide-react'
+import { ChevronLeft, Edit, Plus, Phone, Mail, MapPin, Building2, FileText, ClipboardList, Trash2, Bell, Clock, CheckCircle2, CalendarPlus, Sparkles, Copy, Check, Linkedin } from 'lucide-react'
 import { StatutContactBadge, StatutDevisBadge, StatutBdcBadge, StadeProspectBadge } from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Modal from '@/components/ui/Modal'
@@ -40,6 +40,8 @@ interface Contact {
   sourceLead?: string
   commercial?: string
   notes?: string
+  linkedinUrl?: string
+  clayEnrichedAt?: string
   createdAt: string
   devis: Array<{ id: string; numero: string; objet: string; statut: string; totalTTC: number; createdAt: string }>
   bonsDeCommande: Array<{ id: string; numero: string; statut: string; totalTTC: number; createdAt: string }>
@@ -280,6 +282,24 @@ export default function ContactDetailPage() {
                       <p>{contact.codePostal} {contact.ville}</p>
                     )}
                   </div>
+                </div>
+              )}
+              {contact.linkedinUrl && (
+                <a
+                  href={contact.linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                >
+                  <Linkedin size={15} className="flex-shrink-0" />
+                  Profil LinkedIn
+                </a>
+              )}
+              {contact.clayEnrichedAt && (
+                <div className="pt-1">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-full">
+                    Enrichi via Clay — {new Date(contact.clayEnrichedAt).toLocaleDateString('fr-FR')}
+                  </span>
                 </div>
               )}
             </div>

@@ -67,6 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         sourceLead: body.sourceLead || null,
         commercial: body.commercial || null,
         notes: body.notes || null,
+        linkedinUrl: body.linkedinUrl || null,
       },
     })
 

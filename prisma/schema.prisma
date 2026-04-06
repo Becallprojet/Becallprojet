@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  nom       String
-  prenom    String
-  password  String
-  role      String   @default("USER")
-  actif     Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  nom                 String
+  prenom              String
+  password            String
+  role                String   @default("USER")
+  actif               Boolean  @default(true)
+  googleRefreshToken  String?
+  googleCalendarSync  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   activites Activite[]
   rappels   Rappel[]
@@ -42,6 +44,8 @@ model Contact {
   notes               String?
   stade               String?  @default("NOUVEAU")
   numeroClient        String?  @unique
+  linkedinUrl         String?
+  clayEnrichedAt      DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -177,18 +181,19 @@ model LigneBdc {
 }
 
 model Activite {
-  id         String   @id @default(cuid())
-  type       String
-  titre      String?
-  date       DateTime
-  duree      Int?
-  notes      String?
-  prospectId String?
-  prospect   Contact? @relation(fields: [prospectId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(cuid())
+  type          String
+  titre         String?
+  date          DateTime
+  duree         Int?
+  notes         String?
+  googleEventId String?
+  prospectId    String?
+  prospect      Contact? @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Rappel {

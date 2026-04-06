@@ -35,6 +35,7 @@ export default function EditContactPage() {
     email: '',
     telephoneFixe: '',
     telephoneMobile: '',
+    linkedinUrl: '',
     adresseFacturation: '',
     adresseInstallation: '',
     codePostal: '',
@@ -59,6 +60,7 @@ export default function EditContactPage() {
           email: data.email || '',
           telephoneFixe: data.telephoneFixe || '',
           telephoneMobile: data.telephoneMobile || '',
+          linkedinUrl: data.linkedinUrl || '',
           adresseFacturation: data.adresseFacturation || '',
           adresseInstallation: data.adresseInstallation || '',
           codePostal: data.codePostal || '',
@@ -139,6 +141,7 @@ export default function EditContactPage() {
             <Input label="Email *" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} required />
             <Input label="Téléphone fixe" value={form.telephoneFixe} onChange={(e) => set('telephoneFixe', e.target.value)} />
             <Input label="Téléphone mobile" value={form.telephoneMobile} onChange={(e) => set('telephoneMobile', e.target.value)} />
+            <Input label="LinkedIn URL" type="url" value={form.linkedinUrl} onChange={(e) => set('linkedinUrl', e.target.value)} placeholder="https://linkedin.com/in/prenom-nom" />
           </div>
         </div>
 

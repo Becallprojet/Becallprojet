@@ -1,7 +1,10 @@
+export const runtime = 'nodejs'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { updateGoogleEvent, deleteGoogleEvent } from '@/lib/googleCalendar'
 
 export async function PUT(
   request: NextRequest,
@@ -31,6 +34,15 @@ export async function PUT(
       },
     })
 
+    // Google Calendar sync (silent)
+    try {
+      if (rdv.googleEventId) {
+        await updateGoogleEvent(rdv.userId, rdv.googleEventId, rdv)
+      }
+    } catch (gcErr) {
+      console.error('[GoogleCalendar] PUT sync error:', gcErr)
+    }
+
     return NextResponse.json(rdv)
   } catch (error) {
     console.error(error)
@@ -49,6 +61,20 @@ export async function DELETE(
     }
 
     const { id } = await params
+
+    // Google Calendar sync: delete event before deleting the record (silent)
+    try {
+      const activite = await prisma.activite.findUnique({
+        where: { id },
+        select: { googleEventId: true, userId: true },
+      })
+      if (activite?.googleEventId) {
+        await deleteGoogleEvent(activite.userId, activite.googleEventId)
+      }
+    } catch (gcErr) {
+      console.error('[GoogleCalendar] DELETE sync error:', gcErr)
+    }
+
     await prisma.activite.delete({ where: { id } })
 
     return NextResponse.json({ success: true })

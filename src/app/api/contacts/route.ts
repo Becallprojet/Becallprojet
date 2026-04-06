@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
         sourceLead: body.sourceLead || null,
         commercial: body.commercial || null,
         notes: body.notes || null,
+        linkedinUrl: body.linkedinUrl || null,
       },
     })
 

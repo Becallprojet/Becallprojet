@@ -37,6 +37,7 @@ export default function NewContactPage() {
     email: '',
     telephoneFixe: '',
     telephoneMobile: '',
+    linkedinUrl: '',
     adresseFacturation: '',
     adresseInstallation: '',
     codePostal: '',
@@ -154,6 +155,13 @@ export default function NewContactPage() {
               value={form.telephoneMobile}
               onChange={(e) => set('telephoneMobile', e.target.value)}
               placeholder="06 12 34 56 78"
+            />
+            <Input
+              label="LinkedIn URL"
+              type="url"
+              value={form.linkedinUrl}
+              onChange={(e) => set('linkedinUrl', e.target.value)}
+              placeholder="https://linkedin.com/in/prenom-nom"
             />
           </div>
         </div>

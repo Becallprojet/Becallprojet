@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard, Users, FileText,
-  ClipboardList, BookOpen, ShieldCheck, LogOut, UserCheck, GitBranch, Calendar,
+  ClipboardList, BookOpen, ShieldCheck, LogOut, UserCheck, GitBranch, Calendar, Settings,
 } from 'lucide-react'
 
 const navItems = [
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/devis',       label: 'Devis',             icon: FileText },
   { href: '/bdc',         label: 'Bons de commande',  icon: ClipboardList },
   { href: '/catalogue',   label: 'Catalogue',         icon: BookOpen },
+  { href: '/parametres',  label: 'Paramètres',        icon: Settings },
 ]
 
 export default function Sidebar() {

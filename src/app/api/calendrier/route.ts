@@ -1,7 +1,10 @@
+export const runtime = 'nodejs'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createGoogleEvent } from '@/lib/googleCalendar'
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,6 +72,25 @@ export async function POST(request: NextRequest) {
         user: { select: { id: true, prenom: true, nom: true } },
       },
     })
+
+    // Google Calendar sync (silent — ne bloque jamais)
+    try {
+      const userRecord = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { googleCalendarSync: true },
+      })
+      if (userRecord?.googleCalendarSync) {
+        const googleEventId = await createGoogleEvent(userId, rdv)
+        if (googleEventId) {
+          await prisma.activite.update({
+            where: { id: rdv.id },
+            data: { googleEventId },
+          })
+        }
+      }
+    } catch (gcErr) {
+      console.error('[GoogleCalendar] POST sync error:', gcErr)
+    }
 
     return NextResponse.json(rdv, { status: 201 })
   } catch (error) {
