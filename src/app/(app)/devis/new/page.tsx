@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Plus, Trash2, Package, MonitorSmartphone, Wrench, Search } from 'lucide-react'
@@ -20,6 +20,14 @@ interface Prestation { id: string; reference: string; nom: string; type: string;
 type ModalSection = 'ABONNEMENT' | 'LOCATION' | 'PRESTATION'
 
 export default function DevisNewPage() {
+  return (
+    <Suspense fallback={null}>
+      <DevisNewPageInner />
+    </Suspense>
+  )
+}
+
+function DevisNewPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedContactId = searchParams.get('contactId') || ''
