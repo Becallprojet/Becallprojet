@@ -68,7 +68,7 @@ export default function Dashboard() {
             style={{ border: '1px solid #1A5FBF', color: '#1A5FBF' }}
           >
             <Plus size={16} />
-            Nouveau contact
+            Nouveau prospect
           </Link>
           <Link
             href="/devis/new"
@@ -133,17 +133,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Derniers contacts */}
+        {/* Derniers prospects */}
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-            <h2 className="font-semibold" style={{ color: '#0F2A6B' }}>Derniers contacts</h2>
+            <h2 className="font-semibold" style={{ color: '#0F2A6B' }}>Derniers prospects</h2>
             <Link href="/contacts" className="text-sm font-medium hover:underline" style={{ color: '#0F2A6B' }}>
               Voir tout
             </Link>
           </div>
           <div className="divide-y divide-slate-50">
             {data.derniersContacts.length === 0 && (
-              <p className="px-6 py-4 text-sm text-slate-400">Aucun contact</p>
+              <p className="px-6 py-4 text-sm text-slate-400">Aucun prospect</p>
             )}
             {data.derniersContacts.map((c) => (
               <Link key={c.id} href={`/contacts/${c.id}`}

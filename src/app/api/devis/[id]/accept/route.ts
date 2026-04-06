@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateNumeroBdc } from '@/lib/numbering'
+import { generateNumeroBdc, generateNumeroClient } from '@/lib/numbering'
 
 export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -25,6 +25,13 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
 
     const numeroBdc = await generateNumeroBdc()
 
+    // Check if the contact already has a numeroClient
+    const contact = await prisma.contact.findUnique({
+      where: { id: devis.contactId },
+      select: { numeroClient: true },
+    })
+    const numeroClientFinal = contact?.numeroClient ?? (await generateNumeroClient())
+
     const result = await prisma.$transaction(async (tx) => {
       await tx.devis.update({
         where: { id },
@@ -36,7 +43,7 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
 
       await tx.contact.update({
         where: { id: devis.contactId },
-        data: { statut: 'CLIENT' },
+        data: { statut: 'CLIENT', stade: 'GAGNE', numeroClient: numeroClientFinal },
       })
 
       const bdc = await tx.bonDeCommande.create({

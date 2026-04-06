@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     const contact = await prisma.contact.create({
       data: {
         statut: body.statut || 'PROSPECT',
+        stade: body.stade || 'NOUVEAU',
         civilite: body.civilite || null,
         prenom: body.prenom,
         nom: body.nom,

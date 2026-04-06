@@ -15,16 +15,20 @@ const CIVILITE_OPTIONS = [
   { value: 'Mme', label: 'Mme' },
 ]
 
-const STATUT_OPTIONS = [
-  { value: 'PROSPECT', label: 'Prospect' },
-  { value: 'CLIENT', label: 'Client' },
+const STADE_OPTIONS = [
+  { value: 'NOUVEAU', label: 'Nouveau' },
+  { value: 'CONTACTE', label: 'Contacté' },
+  { value: 'QUALIFIE', label: 'Qualifié' },
+  { value: 'PROPOSITION', label: 'Proposition' },
+  { value: 'NEGOCIE', label: 'Négocié' },
+  { value: 'GAGNE', label: 'Gagné' },
+  { value: 'PERDU', label: 'Perdu' },
 ]
 
 export default function NewContactPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    statut: 'PROSPECT',
     civilite: '',
     prenom: '',
     nom: '',
@@ -40,6 +44,7 @@ export default function NewContactPage() {
     sourceLead: '',
     commercial: '',
     notes: '',
+    stade: 'NOUVEAU',
   })
 
   const set = (field: string, value: string) =>
@@ -54,7 +59,7 @@ export default function NewContactPage() {
       const res = await fetch('/api/contacts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, statut: 'PROSPECT' }),
       })
       if (!res.ok) throw new Error()
       const contact = await res.json()
@@ -73,7 +78,7 @@ export default function NewContactPage() {
           <ChevronLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Nouveau contact</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Nouveau prospect</h1>
         </div>
       </div>
 
@@ -83,10 +88,10 @@ export default function NewContactPage() {
           <h2 className="form-section-title">Identité</h2>
           <div className="form-grid">
             <Select
-              label="Statut"
-              value={form.statut}
-              onChange={(e) => set('statut', e.target.value)}
-              options={STATUT_OPTIONS}
+              label="Stade"
+              value={form.stade}
+              onChange={(e) => set('stade', e.target.value)}
+              options={STADE_OPTIONS}
             />
             <Select
               label="Civilité"
@@ -222,7 +227,7 @@ export default function NewContactPage() {
             <Button variant="outline" type="button">Annuler</Button>
           </Link>
           <Button type="submit" loading={loading}>
-            Créer le contact
+            Créer le prospect
           </Button>
         </div>
       </form>

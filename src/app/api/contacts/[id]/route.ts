@@ -51,6 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       data: {
         statut: body.statut,
+        ...(body.stade !== undefined ? { stade: body.stade } : {}),
         civilite: body.civilite || null,
         prenom: body.prenom,
         nom: body.nom,

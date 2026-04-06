@@ -17,6 +17,9 @@ model User {
   actif     Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  activites Activite[]
+  rappels   Rappel[]
 }
 
 model Contact {
@@ -37,11 +40,15 @@ model Contact {
   sourceLead          String?
   commercial          String?
   notes               String?
+  stade               String?  @default("NOUVEAU")
+  numeroClient        String?  @unique
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   devis          Devis[]
   bonsDeCommande BonDeCommande[]
+  activites      Activite[]
+  rappels        Rappel[]
 }
 
 model Abonnement {
@@ -167,4 +174,32 @@ model LigneBdc {
   prixUnitaireHT Float
   totalHT        Float
   createdAt      DateTime      @default(now())
+}
+
+model Activite {
+  id         String   @id @default(cuid())
+  type       String
+  date       DateTime
+  duree      Int?
+  notes      String?
+  prospectId String
+  prospect   Contact  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Rappel {
+  id         String   @id @default(cuid())
+  date       DateTime
+  titre      String
+  notes      String?
+  prospectId String
+  prospect   Contact  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  fait       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

@@ -10,12 +10,23 @@ import Select from '@/components/ui/Select'
 import Textarea from '@/components/ui/Textarea'
 import { SOURCES_LEAD } from '@/lib/utils'
 
+const STADE_OPTIONS = [
+  { value: 'NOUVEAU', label: 'Nouveau' },
+  { value: 'CONTACTE', label: 'Contacté' },
+  { value: 'QUALIFIE', label: 'Qualifié' },
+  { value: 'PROPOSITION', label: 'Proposition' },
+  { value: 'NEGOCIE', label: 'Négocié' },
+  { value: 'GAGNE', label: 'Gagné' },
+  { value: 'PERDU', label: 'Perdu' },
+]
+
 export default function EditContactPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     statut: 'PROSPECT',
+    stade: 'NOUVEAU',
     civilite: '',
     prenom: '',
     nom: '',
@@ -39,6 +50,7 @@ export default function EditContactPage() {
       .then((data) => {
         setForm({
           statut: data.statut || 'PROSPECT',
+          stade: data.stade || 'NOUVEAU',
           civilite: data.civilite || '',
           prenom: data.prenom || '',
           nom: data.nom || '',
@@ -100,6 +112,12 @@ export default function EditContactPage() {
                 { value: 'PROSPECT', label: 'Prospect' },
                 { value: 'CLIENT', label: 'Client' },
               ]}
+            />
+            <Select
+              label="Stade"
+              value={form.stade}
+              onChange={(e) => set('stade', e.target.value)}
+              options={STADE_OPTIONS}
             />
             <Select
               label="Civilité"

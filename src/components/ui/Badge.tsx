@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn, STADE_LABELS } from '@/lib/utils'
 
 type BadgeVariant = 'blue' | 'green' | 'yellow' | 'red' | 'gray' | 'purple' | 'orange'
 
@@ -60,4 +60,18 @@ export function StatutBdcBadge({ statut }: { statut: string }) {
   }
   const { variant, label } = map[statut] || { variant: 'gray', label: statut }
   return <Badge variant={variant}>{label}</Badge>
+}
+
+export function StadeProspectBadge({ stade }: { stade: string }) {
+  const map: Record<string, { variant: BadgeVariant }> = {
+    NOUVEAU:     { variant: 'gray' },
+    CONTACTE:    { variant: 'blue' },
+    QUALIFIE:    { variant: 'purple' },
+    PROPOSITION: { variant: 'yellow' },
+    NEGOCIE:     { variant: 'orange' },
+    GAGNE:       { variant: 'green' },
+    PERDU:       { variant: 'red' },
+  }
+  const { variant } = map[stade] || { variant: 'gray' }
+  return <Badge variant={variant}>{STADE_LABELS[stade] ?? stade}</Badge>
 }

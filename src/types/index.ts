@@ -3,6 +3,10 @@ export type StatutDevis = 'BROUILLON' | 'ENVOYE' | 'ACCEPTE' | 'REFUSE'
 export type StatutBdc = 'EN_COURS' | 'LIVRE' | 'ANNULE'
 export type TypeLigne = 'ABONNEMENT' | 'PRESTATION' | 'LOCATION'
 export type TypeAbonnement = 'MATERIEL' | 'OPERATEUR' | 'PRESTATION' | 'MAINTENANCE'
+export type StadeProspect = 'NOUVEAU' | 'CONTACTE' | 'QUALIFIE' | 'PROPOSITION' | 'NEGOCIE' | 'GAGNE' | 'PERDU'
+export type TypeActivite = 'APPEL' | 'RDV' | 'EMAIL' | 'NOTE'
+export const STADES_PROSPECT: StadeProspect[] = ['NOUVEAU', 'CONTACTE', 'QUALIFIE', 'PROPOSITION', 'NEGOCIE', 'GAGNE', 'PERDU']
+export const TYPES_ACTIVITE: TypeActivite[] = ['APPEL', 'RDV', 'EMAIL', 'NOTE']
 
 export interface LigneInput {
   tempId: string

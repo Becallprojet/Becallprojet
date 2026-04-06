@@ -56,6 +56,14 @@ export const TYPE_ABONNEMENT_LABELS: Record<string, string> = {
   MAINTENANCE: 'Maintenance',
 }
 
+export const STADE_LABELS: Record<string, string> = {
+  NOUVEAU: 'Nouveau', CONTACTE: 'Contacté', QUALIFIE: 'Qualifié',
+  PROPOSITION: 'Proposition', NEGOCIE: 'Négocié', GAGNE: 'Gagné', PERDU: 'Perdu',
+}
+export const TYPE_ACTIVITE_LABELS: Record<string, string> = {
+  APPEL: 'Appel', RDV: 'Rendez-vous', EMAIL: 'Email', NOTE: 'Note',
+}
+
 export const DUREES_ENGAGEMENT = [12, 24, 36, 48, 60, 63]
 
 export const SOURCES_LEAD = [
