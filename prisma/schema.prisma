@@ -179,11 +179,12 @@ model LigneBdc {
 model Activite {
   id         String   @id @default(cuid())
   type       String
+  titre      String?
   date       DateTime
   duree      Int?
   notes      String?
-  prospectId String
-  prospect   Contact  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  prospectId String?
+  prospect   Contact? @relation(fields: [prospectId], references: [id], onDelete: Cascade)
   userId     String
   user       User     @relation(fields: [userId], references: [id])
   createdAt  DateTime @default(now())
@@ -195,8 +196,8 @@ model Rappel {
   date       DateTime
   titre      String
   notes      String?
-  prospectId String
-  prospect   Contact  @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+  prospectId String?
+  prospect   Contact? @relation(fields: [prospectId], references: [id], onDelete: Cascade)
   userId     String
   user       User     @relation(fields: [userId], references: [id])
   fait       Boolean  @default(false)

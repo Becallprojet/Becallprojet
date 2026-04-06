@@ -32,6 +32,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const activite = await prisma.activite.create({
       data: {
         type: body.type,
+        titre: body.titre || null,
         date: new Date(body.date),
         duree: body.duree ? parseInt(body.duree) : null,
         notes: body.notes || null,

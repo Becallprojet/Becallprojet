@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Edit, Plus, Phone, Mail, MapPin, Building2, FileText, ClipboardList, Trash2, Bell, Clock, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, Edit, Plus, Phone, Mail, MapPin, Building2, FileText, ClipboardList, Trash2, Bell, Clock, CheckCircle2, CalendarPlus } from 'lucide-react'
 import { StatutContactBadge, StatutDevisBadge, StatutBdcBadge, StadeProspectBadge } from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import { formatMontant, formatDate, formatDateInput, TYPE_ACTIVITE_LABELS } from '@/lib/utils'
@@ -180,6 +180,12 @@ export default function ContactDetailPage() {
             <Button variant="secondary" size="sm">
               <Plus size={15} />
               Nouveau devis
+            </Button>
+          </Link>
+          <Link href={`/calendrier?prospectId=${id}`}>
+            <Button variant="outline" size="sm">
+              <CalendarPlus size={15} />
+              Planifier un RDV
             </Button>
           </Link>
           <Link href={`/contacts/${id}/edit`}>

@@ -6,17 +6,18 @@ import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard, Users, FileText,
-  ClipboardList, BookOpen, ShieldCheck, LogOut, UserCheck, GitBranch,
+  ClipboardList, BookOpen, ShieldCheck, LogOut, UserCheck, GitBranch, Calendar,
 } from 'lucide-react'
 
 const navItems = [
-  { href: '/',          label: 'Tableau de bord',  icon: LayoutDashboard },
-  { href: '/contacts',  label: 'Prospects',         icon: Users },
-  { href: '/pipeline',  label: 'Pipeline',          icon: GitBranch },
-  { href: '/clients',   label: 'Clients',           icon: UserCheck },
-  { href: '/devis',     label: 'Devis',             icon: FileText },
-  { href: '/bdc',       label: 'Bons de commande',  icon: ClipboardList },
-  { href: '/catalogue', label: 'Catalogue',         icon: BookOpen },
+  { href: '/',            label: 'Tableau de bord',  icon: LayoutDashboard },
+  { href: '/contacts',    label: 'Prospects',         icon: Users },
+  { href: '/pipeline',    label: 'Pipeline',          icon: GitBranch },
+  { href: '/calendrier',  label: 'Calendrier',        icon: Calendar },
+  { href: '/clients',     label: 'Clients',           icon: UserCheck },
+  { href: '/devis',       label: 'Devis',             icon: FileText },
+  { href: '/bdc',         label: 'Bons de commande',  icon: ClipboardList },
+  { href: '/catalogue',   label: 'Catalogue',         icon: BookOpen },
 ]
 
 export default function Sidebar() {
