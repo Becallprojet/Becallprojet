@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Settings, Calendar, Zap, CheckCircle, XCircle, Copy, Check } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
@@ -15,6 +16,8 @@ export default function ParametresPage() {
 
 function ParametresPageInner() {
   const searchParams = useSearchParams()
+  const { data: session } = useSession()
+  const isAdmin = (session?.user as { role?: string })?.role === 'ADMIN'
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -161,8 +164,8 @@ function ParametresPageInner() {
           </div>
         </div>
 
-        {/* Clay */}
-        <div className="px-6 py-5">
+        {/* Clay — admin uniquement */}
+        {isAdmin && <div className="px-6 py-5">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
               <Zap size={18} className="text-purple-600" />
@@ -213,11 +216,11 @@ function ParametresPageInner() {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
-      {/* Section Informations */}
-      <div className="bg-white rounded-xl border border-slate-200">
+      {/* Section Informations — admin uniquement */}
+      {isAdmin && <div className="bg-white rounded-xl border border-slate-200">
         <div className="px-6 py-4 border-b border-slate-100">
           <h2 className="font-semibold text-slate-900 text-base">Informations</h2>
           <p className="text-sm text-slate-500 mt-0.5">Variables d&apos;environnement de l&apos;application.</p>
@@ -236,7 +239,7 @@ function ParametresPageInner() {
             </div>
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }
