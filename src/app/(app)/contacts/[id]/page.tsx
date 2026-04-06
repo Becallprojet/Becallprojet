@@ -1,12 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, Edit, Plus, Phone, Mail, MapPin, Building2, FileText, ClipboardList, Trash2, Bell, Clock, CheckCircle2, CalendarPlus } from 'lucide-react'
+import { ChevronLeft, Edit, Plus, Phone, Mail, MapPin, Building2, FileText, ClipboardList, Trash2, Bell, Clock, CheckCircle2, CalendarPlus, Sparkles, Copy, Check } from 'lucide-react'
 import { StatutContactBadge, StatutDevisBadge, StatutBdcBadge, StadeProspectBadge } from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import Modal from '@/components/ui/Modal'
 import { formatMontant, formatDate, formatDateInput, TYPE_ACTIVITE_LABELS } from '@/lib/utils'
+
+interface AiAction {
+  type: string
+  suggestion: string
+  urgence: 'HAUTE' | 'MOYENNE' | 'FAIBLE'
+}
+
+interface AiResult {
+  email: string
+  action: AiAction
+}
 
 interface Contact {
   id: string
@@ -64,6 +76,11 @@ export default function ContactDetailPage() {
   const [savingRappel, setSavingRappel] = useState(false)
   const [showActiviteForm, setShowActiviteForm] = useState(false)
   const [showRappelForm, setShowRappelForm] = useState(false)
+  const [showAiModal, setShowAiModal] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiResult, setAiResult] = useState<AiResult | null>(null)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [emailCopied, setEmailCopied] = useState(false)
 
   useEffect(() => {
     fetch(`/api/contacts/${id}`)
@@ -132,6 +149,34 @@ export default function ContactDetailPage() {
     }
   }
 
+  const handleAiSuggest = useCallback(async () => {
+    setShowAiModal(true)
+    setAiLoading(true)
+    setAiError(null)
+    setAiResult(null)
+    setEmailCopied(false)
+    try {
+      const res = await fetch(`/api/contacts/${id}/ai-suggest`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        setAiError(data.error || 'Erreur lors de la génération de la suggestion.')
+      } else {
+        setAiResult(data)
+      }
+    } catch {
+      setAiError('Erreur réseau. Vérifiez votre connexion.')
+    } finally {
+      setAiLoading(false)
+    }
+  }, [id])
+
+  const handleCopyEmail = async () => {
+    if (!aiResult?.email) return
+    await navigator.clipboard.writeText(aiResult.email)
+    setEmailCopied(true)
+    setTimeout(() => setEmailCopied(false), 2000)
+  }
+
   const handleDelete = async () => {
     if (!confirm('Supprimer ce prospect ? Cette action est irréversible.')) return
     const res = await fetch(`/api/contacts/${id}`, { method: 'DELETE' })
@@ -176,6 +221,10 @@ export default function ContactDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={handleAiSuggest}>
+            <Sparkles size={15} />
+            Suggérer une relance
+          </Button>
           <Link href={`/devis/new?contactId=${id}`}>
             <Button variant="secondary" size="sm">
               <Plus size={15} />
@@ -539,6 +588,76 @@ export default function ContactDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal IA */}
+      <Modal
+        open={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        title="Suggestion de relance IA"
+        size="xl"
+      >
+        {aiLoading && (
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <div className="animate-spin w-10 h-10 border-4 border-[#1A5FBF] border-t-transparent rounded-full" />
+            <p className="text-sm text-slate-500">L&apos;IA analyse le dossier...</p>
+          </div>
+        )}
+
+        {!aiLoading && aiError && (
+          <div className="flex flex-col items-center gap-4 py-8">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 w-full">
+              <p className="text-sm text-red-700">{aiError}</p>
+            </div>
+            <Button variant="secondary" size="sm" onClick={handleAiSuggest}>
+              <Sparkles size={14} />
+              Réessayer
+            </Button>
+          </div>
+        )}
+
+        {!aiLoading && aiResult && (
+          <div className="space-y-5">
+            {/* Email de relance */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">Email de relance</h4>
+                <button
+                  onClick={handleCopyEmail}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  {emailCopied ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
+                  {emailCopied ? 'Copié !' : 'Copier'}
+                </button>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <pre className="text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">{aiResult.email}</pre>
+              </div>
+            </div>
+
+            {/* Action recommandée */}
+            <div>
+              <h4 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-2">Action recommandée</h4>
+              <div className="bg-white rounded-lg border border-slate-200 p-4 space-y-3">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="text-sm font-semibold text-slate-800">{aiResult.action.type}</span>
+                  <span
+                    className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      aiResult.action.urgence === 'HAUTE'
+                        ? 'bg-red-100 text-red-700'
+                        : aiResult.action.urgence === 'MOYENNE'
+                        ? 'bg-orange-100 text-orange-700'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    Urgence {aiResult.action.urgence}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed">{aiResult.action.suggestion}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

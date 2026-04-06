@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Users, FileText, ClipboardList, TrendingUp, Plus, GitBranch, Bell, Activity } from 'lucide-react'
+import { Users, FileText, ClipboardList, TrendingUp, Plus, GitBranch, Bell, Activity, Sparkles, X } from 'lucide-react'
 import { StatCard } from '@/components/ui/Card'
 import { StatutDevisBadge } from '@/components/ui/Badge'
 import PipelineChart from '@/components/ui/PipelineChart'
@@ -50,15 +50,51 @@ interface DashboardData {
   }>
 }
 
+interface PipelineRecommandation {
+  priorite: number
+  titre: string
+  detail: string
+  impact: 'FORT' | 'MOYEN' | 'FAIBLE'
+}
+
+interface PipelineAiResult {
+  analyse: string
+  recommandations: PipelineRecommandation[]
+}
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showPipelineAi, setShowPipelineAi] = useState(false)
+  const [pipelineAiLoading, setPipelineAiLoading] = useState(false)
+  const [pipelineAiResult, setPipelineAiResult] = useState<PipelineAiResult | null>(null)
+  const [pipelineAiError, setPipelineAiError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/dashboard')
       .then((r) => r.json())
       .then(setData)
       .finally(() => setLoading(false))
+  }, [])
+
+  const handleAnalysePipeline = useCallback(async () => {
+    setShowPipelineAi(true)
+    setPipelineAiLoading(true)
+    setPipelineAiError(null)
+    setPipelineAiResult(null)
+    try {
+      const res = await fetch('/api/dashboard/ai-pipeline', { method: 'POST' })
+      const resultData = await res.json()
+      if (!res.ok) {
+        setPipelineAiError(resultData.error || "Erreur lors de l'analyse IA.")
+      } else {
+        setPipelineAiResult(resultData)
+      }
+    } catch {
+      setPipelineAiError('Erreur réseau. Vérifiez votre connexion.')
+    } finally {
+      setPipelineAiLoading(false)
+    }
   }, [])
 
   if (loading) {
@@ -81,6 +117,15 @@ export default function Dashboard() {
           <p className="text-sm text-slate-500 mt-1">Vue d&apos;ensemble de votre activité commerciale</p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={handleAnalysePipeline}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-sm font-medium rounded-lg transition-colors hover:bg-purple-50 disabled:opacity-60"
+            style={{ border: '1px solid #7C3AED', color: '#7C3AED' }}
+            disabled={pipelineAiLoading}
+          >
+            <Sparkles size={16} />
+            Analyser mon pipeline
+          </button>
           <Link
             href="/pipeline"
             className="inline-flex items-center gap-2 px-4 py-2 bg-white text-sm font-medium rounded-lg transition-colors hover:bg-slate-50"
@@ -125,6 +170,95 @@ export default function Dashboard() {
         <StatCard title="CA BDC réel (TTC)" value={formatMontant(data.caBdc)} subtitle="En cours + livrés" icon={<TrendingUp size={20} />} color="purple" />
         <StatCard title="Taux de conversion" value={`${data.tauxConversion}%`} subtitle="Prospects gagnés" icon={<TrendingUp size={20} />} color="green" />
       </div>
+
+      {/* Panneau IA Pipeline */}
+      {showPipelineAi && (
+        <div className="mb-6 bg-white rounded-xl border border-purple-200 overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-purple-100" style={{ background: '#F5F3FF' }}>
+            <h2 className="font-semibold flex items-center gap-2" style={{ color: '#7C3AED' }}>
+              <Sparkles size={16} style={{ color: '#7C3AED' }} />
+              Analyse IA du pipeline
+            </h2>
+            <button
+              onClick={() => setShowPipelineAi(false)}
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {pipelineAiLoading && (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="animate-spin w-10 h-10 border-4 border-t-transparent rounded-full" style={{ borderColor: '#7C3AED', borderTopColor: 'transparent' }} />
+              <p className="text-sm text-slate-500">L&apos;IA analyse votre pipeline...</p>
+            </div>
+          )}
+
+          {!pipelineAiLoading && pipelineAiError && (
+            <div className="p-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-red-700">{pipelineAiError}</p>
+              </div>
+              <button
+                onClick={handleAnalysePipeline}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors hover:bg-purple-50"
+                style={{ border: '1px solid #7C3AED', color: '#7C3AED' }}
+              >
+                <Sparkles size={14} />
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          {!pipelineAiLoading && pipelineAiResult && (
+            <div className="p-6 space-y-6">
+              {/* Analyse */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-2">Analyse</h3>
+                <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  {pipelineAiResult.analyse}
+                </p>
+              </div>
+
+              {/* Recommandations */}
+              {pipelineAiResult.recommandations.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 uppercase tracking-wider mb-3">Recommandations</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {pipelineAiResult.recommandations.map((rec) => (
+                      <div key={rec.priorite} className="bg-white rounded-lg border border-slate-200 p-4 space-y-2 hover:border-purple-200 transition-colors">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                              style={{ background: '#7C3AED' }}
+                            >
+                              {rec.priorite}
+                            </span>
+                            <p className="text-sm font-semibold text-slate-800 leading-tight">{rec.titre}</p>
+                          </div>
+                          <span
+                            className={`flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
+                              rec.impact === 'FORT'
+                                ? 'bg-red-100 text-red-700'
+                                : rec.impact === 'MOYEN'
+                                ? 'bg-orange-100 text-orange-700'
+                                : 'bg-green-100 text-green-700'
+                            }`}
+                          >
+                            {rec.impact}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">{rec.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
