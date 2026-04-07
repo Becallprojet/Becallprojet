@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { geminiGenerateJSON } from '@/lib/gemini'
 import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function POST() {
@@ -110,31 +110,21 @@ Génère une réponse JSON avec exactement ces deux clés :
    - "priorite" : numéro de priorité (1 = plus urgent)
    - "titre" : titre court de la recommandation (max 60 caractères)
    - "detail" : description détaillée de l'action à mener (2-3 phrases)
-   - "impact" : niveau d'impact parmi "FORT", "MOYEN" ou "FAIBLE"
+   - "impact" : niveau d'impact parmi "FORT", "MOYEN" ou "FAIBLE"`
 
-Réponds uniquement avec le JSON valide, sans markdown ni texte autour.`
-
-    const message = await getAnthropicClient().messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 2000,
-      system:
-        'Tu es un directeur commercial expert en stratégie B2B et en management des ventes. Tu analyses les pipelines commerciaux et fournis des recommandations actionnables. Tu réponds uniquement en JSON valide, sans markdown.',
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const rawContent = message.content[0]
-    if (rawContent.type !== 'text') {
-      return NextResponse.json({ error: 'Réponse IA invalide' }, { status: 500 })
-    }
+    const rawText = await geminiGenerateJSON(
+      prompt,
+      'Tu es un directeur commercial expert en stratégie B2B et en management des ventes. Tu analyses les pipelines commerciaux et fournis des recommandations actionnables. Tu réponds uniquement en JSON valide, sans markdown.'
+    )
 
     let result: {
       analyse: string
       recommandations: Array<{ priorite: number; titre: string; detail: string; impact: string }>
     }
     try {
-      result = JSON.parse(rawContent.text)
+      result = JSON.parse(rawText)
     } catch {
-      const match = rawContent.text.match(/\{[\s\S]*\}/)
+      const match = rawText.match(/\{[\s\S]*\}/)
       if (!match) {
         return NextResponse.json({ error: 'Impossible de parser la réponse IA' }, { status: 500 })
       }
@@ -145,11 +135,11 @@ Réponds uniquement avec le JSON valide, sans markdown ni texte autour.`
   } catch (error: unknown) {
     console.error('AI pipeline error:', error)
     if (error instanceof Error) {
-      if (error.message.includes('rate_limit') || error.message.includes('429')) {
+      if (error.message.includes('429') || error.message.includes('quota')) {
         return NextResponse.json({ error: 'Limite de requêtes IA atteinte. Réessayez dans quelques instants.' }, { status: 429 })
       }
-      if (error.message.includes('authentication') || error.message.includes('401')) {
-        return NextResponse.json({ error: "Clé API Anthropic invalide. Vérifiez votre configuration." }, { status: 401 })
+      if (error.message.includes('API_KEY') || error.message.includes('401') || error.message.includes('403')) {
+        return NextResponse.json({ error: 'Clé API Gemini invalide. Vérifiez votre configuration.' }, { status: 401 })
       }
     }
     return NextResponse.json({ error: "Erreur lors de l'analyse IA du pipeline" }, { status: 500 })

@@ -1,24 +1,19 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { getAnthropicClient } from '@/lib/anthropic'
+import { geminiGenerateJSON } from '@/lib/gemini'
+import { requireAuth, isNextResponse } from '@/lib/session'
 
 export async function POST(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-    }
+    const user = await requireAuth()
+    if (isNextResponse(user)) return user
 
     const { id } = await params
 
     const [contact, activites, dernierDevis, rappels] = await Promise.all([
-      prisma.contact.findUnique({
-        where: { id },
-      }),
+      prisma.contact.findUnique({ where: { id } }),
       prisma.activite.findMany({
         where: { prospectId: id },
         orderBy: { date: 'desc' },
@@ -42,6 +37,11 @@ export async function POST(_: NextRequest, { params }: { params: Promise<{ id: s
 
     if (!contact) {
       return NextResponse.json({ error: 'Contact introuvable' }, { status: 404 })
+    }
+
+    // Ownership check
+    if (contact.userId && contact.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
     }
 
     const contactInfo = [
@@ -112,29 +112,18 @@ Génère une réponse JSON avec exactement ces deux clés :
 2. "action" : un objet avec les clés :
    - "type" : type d'action recommandée (ex: "APPEL", "EMAIL", "RDV", "DEVIS")
    - "suggestion" : description détaillée de l'action à mener (2-3 phrases)
-   - "urgence" : niveau d'urgence parmi "HAUTE", "MOYENNE" ou "FAIBLE"
+   - "urgence" : niveau d'urgence parmi "HAUTE", "MOYENNE" ou "FAIBLE"`
 
-Réponds uniquement avec le JSON, sans markdown ni texte autour.`
-
-    const message = await getAnthropicClient().messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 1500,
-      system:
-        'Tu es un assistant commercial B2B expert en relation client et en stratégie de vente. Tu réponds uniquement en JSON valide, sans markdown.',
-      messages: [{ role: 'user', content: prompt }],
-    })
-
-    const rawContent = message.content[0]
-    if (rawContent.type !== 'text') {
-      return NextResponse.json({ error: 'Réponse IA invalide' }, { status: 500 })
-    }
+    const rawText = await geminiGenerateJSON(
+      prompt,
+      'Tu es un assistant commercial B2B expert en relation client et en stratégie de vente. Tu réponds uniquement en JSON valide, sans markdown.'
+    )
 
     let result: { email: string; action: { type: string; suggestion: string; urgence: string } }
     try {
-      result = JSON.parse(rawContent.text)
+      result = JSON.parse(rawText)
     } catch {
-      // Try to extract JSON from the text
-      const match = rawContent.text.match(/\{[\s\S]*\}/)
+      const match = rawText.match(/\{[\s\S]*\}/)
       if (!match) {
         return NextResponse.json({ error: 'Impossible de parser la réponse IA' }, { status: 500 })
       }
@@ -145,11 +134,11 @@ Réponds uniquement avec le JSON, sans markdown ni texte autour.`
   } catch (error: unknown) {
     console.error('AI suggest error:', error)
     if (error instanceof Error) {
-      if (error.message.includes('rate_limit') || error.message.includes('429')) {
+      if (error.message.includes('429') || error.message.includes('quota')) {
         return NextResponse.json({ error: 'Limite de requêtes IA atteinte. Réessayez dans quelques instants.' }, { status: 429 })
       }
-      if (error.message.includes('authentication') || error.message.includes('401')) {
-        return NextResponse.json({ error: "Clé API Anthropic invalide. Vérifiez votre configuration." }, { status: 401 })
+      if (error.message.includes('API_KEY') || error.message.includes('401') || error.message.includes('403')) {
+        return NextResponse.json({ error: 'Clé API Gemini invalide. Vérifiez votre configuration.' }, { status: 401 })
       }
     }
     return NextResponse.json({ error: 'Erreur lors de la génération de la suggestion IA' }, { status: 500 })
