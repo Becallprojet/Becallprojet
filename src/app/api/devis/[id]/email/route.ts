@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDocumentEmail } from '@/lib/email'
 import { generatePersonalizedEmail } from '@/lib/gemini'
+import { generatePDF } from '@/lib/puppeteer'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -49,6 +50,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       userMessage: message,
     })
 
+    // Generate PDF and attach it
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    let pdfBuffer: Buffer | undefined
+    try {
+      pdfBuffer = await generatePDF(`${baseUrl}/print/devis/${id}`)
+    } catch (err) {
+      console.warn('[email] PDF generation failed, sending without attachment:', err)
+    }
+
     await sendDocumentEmail({
       to,
       subject,
@@ -58,6 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       documentNumero: devis.numero,
       documentData: devis as unknown as Record<string, unknown>,
       userId: (session?.user as { id?: string } | undefined)?.id,
+      pdfAttachment: pdfBuffer ? { filename: `Devis-${devis.numero}.pdf`, content: pdfBuffer } : undefined,
     })
 
     if (devis.statut === 'BROUILLON') {

@@ -27,6 +27,7 @@ export interface SendEmailOptions {
   documentNumero: string
   documentData: Record<string, unknown>
   userId?: string
+  pdfAttachment?: { filename: string; content: Buffer }
 }
 
 function generateDocumentHtml(
@@ -134,19 +135,33 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
     : []
   const cgvFile = bdcAttachments.length > 0 ? bdcAttachments : null
 
+  // Build full attachments list (document PDF + CGV/IPC)
+  const gmailAttachmentsList: GmailAttachment[] = []
+  if (options.pdfAttachment) {
+    gmailAttachmentsList.push({
+      filename: options.pdfAttachment.filename,
+      content: options.pdfAttachment.content,
+      contentType: 'application/pdf',
+    })
+  }
+  if (cgvFile) {
+    cgvFile.forEach(f => gmailAttachmentsList.push({ filename: f.filename, content: fs.readFileSync(f.path), contentType: f.contentType }))
+  }
+
+  const nodemailerAttachments = [
+    ...(options.pdfAttachment ? [{ filename: options.pdfAttachment.filename, content: options.pdfAttachment.content }] : []),
+    ...(cgvFile ? cgvFile.map(f => ({ filename: f.filename, path: f.path })) : []),
+  ]
+
   // Attempt to send via Gmail API when a userId is provided
   if (options.userId) {
     try {
-      const gmailAttachments: GmailAttachment[] = cgvFile
-        ? cgvFile.map(f => ({ filename: f.filename, content: fs.readFileSync(f.path), contentType: f.contentType }))
-        : []
-
       await sendEmailViaGmail(options.userId, {
         to: options.to,
         subject: options.subject,
         html: messageHtml,
         from: process.env.SMTP_FROM,
-        attachments: gmailAttachments,
+        attachments: gmailAttachmentsList,
       })
       return
     } catch (err) {
@@ -162,6 +177,6 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
     to: options.to,
     subject: options.subject,
     html: messageHtml,
-    ...(cgvFile ? { attachments: cgvFile.map(f => ({ filename: f.filename, path: f.path })) } : {}),
+    ...(nodemailerAttachments.length > 0 ? { attachments: nodemailerAttachments } : {}),
   })
 }
