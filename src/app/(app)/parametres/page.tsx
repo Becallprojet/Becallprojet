@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Settings, Calendar, Zap, CheckCircle, XCircle, Copy, Check } from 'lucide-react'
+import { Settings, Calendar, Zap, CheckCircle, XCircle, Copy, Check, FileText, Upload, Trash2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 
 export default function ParametresPage() {
@@ -22,10 +22,22 @@ function ParametresPageInner() {
   const [disconnecting, setDisconnecting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [cgvExists, setCgvExists] = useState<boolean | null>(null)
+  const [cgvUploading, setCgvUploading] = useState(false)
+  const [cgvDeleting, setCgvDeleting] = useState(false)
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const clayWebhookUrl = `${appUrl}/api/webhooks/clay`
   const claySecret = process.env.NEXT_PUBLIC_CLAY_WEBHOOK_SECRET ?? '(voir CLAY_WEBHOOK_SECRET dans .env)'
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetch('/api/admin/cgv')
+        .then((r) => r.json())
+        .then((data) => setCgvExists(data.exists ?? false))
+        .catch(() => setCgvExists(false))
+    }
+  }, [isAdmin])
 
   useEffect(() => {
     fetch('/api/google/status')
@@ -55,6 +67,43 @@ function ParametresPageInner() {
       setNotification({ type: 'error', message: 'Erreur lors de la déconnexion.' })
     } finally {
       setDisconnecting(false)
+    }
+  }
+
+  const handleCgvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCgvUploading(true)
+    try {
+      const form = new FormData()
+      form.append('cgv', file)
+      const res = await fetch('/api/admin/cgv', { method: 'POST', body: form })
+      if (res.ok) {
+        setCgvExists(true)
+        setNotification({ type: 'success', message: 'CGV uploadée avec succès.' })
+      } else {
+        setNotification({ type: 'error', message: 'Erreur lors de l\'upload de la CGV.' })
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Erreur lors de l\'upload de la CGV.' })
+    } finally {
+      setCgvUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleCgvDelete = async () => {
+    setCgvDeleting(true)
+    try {
+      const res = await fetch('/api/admin/cgv', { method: 'DELETE' })
+      if (res.ok) {
+        setCgvExists(false)
+        setNotification({ type: 'success', message: 'CGV supprimée.' })
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Erreur lors de la suppression.' })
+    } finally {
+      setCgvDeleting(false)
     }
   }
 
@@ -218,6 +267,66 @@ function ParametresPageInner() {
           </div>
         </div>}
       </div>
+
+      {/* Section CGV — admin uniquement */}
+      {isAdmin && <div className="bg-white rounded-xl border border-slate-200 mb-6">
+        <div className="px-6 py-4 border-b border-slate-100">
+          <h2 className="font-semibold text-slate-900 text-base">Conditions Générales de Vente</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Le PDF sera automatiquement joint à chaque bon de commande envoyé par email.</p>
+        </div>
+        <div className="px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                <FileText size={18} className="text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">CGV_BECALL.pdf</p>
+                {cgvExists === null ? (
+                  <p className="text-xs text-slate-400">Chargement...</p>
+                ) : cgvExists ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full mt-1">
+                    <CheckCircle size={11} />
+                    CGV configurée
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full mt-1">
+                    <XCircle size={11} />
+                    Aucune CGV uploadée
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {cgvExists && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCgvDelete}
+                  loading={cgvDeleting}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 size={14} className="mr-1" />
+                  Supprimer
+                </Button>
+              )}
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleCgvUpload}
+                  disabled={cgvUploading}
+                />
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${cgvUploading ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-400' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'}`}>
+                  <Upload size={13} />
+                  {cgvUploading ? 'Upload...' : cgvExists ? 'Remplacer' : 'Uploader'}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>}
 
       {/* Section Informations — admin uniquement */}
       {isAdmin && <div className="bg-white rounded-xl border border-slate-200">

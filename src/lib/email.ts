@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer'
 import { formatMontant, formatDate } from './utils'
-import { sendEmailViaGmail } from './gmail'
+import { sendEmailViaGmail, type GmailAttachment } from './gmail'
+import path from 'path'
+import fs from 'fs'
 
 export const runtime = 'nodejs'
 
@@ -98,6 +100,14 @@ function generateDocumentHtml(
 </html>`
 }
 
+function getCgvAttachment(): { filename: string; path: string; contentType: string } | null {
+  const cgvPath = path.join(process.cwd(), 'public', 'cgv.pdf')
+  if (fs.existsSync(cgvPath)) {
+    return { filename: 'CGV_BECALL.pdf', path: cgvPath, contentType: 'application/pdf' }
+  }
+  return null
+}
+
 export async function sendDocumentEmail(options: SendEmailOptions) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
@@ -115,14 +125,22 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
       ${htmlDocument}
     </div>`
 
+  // Attach CGV only for BDC emails
+  const cgvFile = options.documentType === 'bdc' ? getCgvAttachment() : null
+
   // Attempt to send via Gmail API when a userId is provided
   if (options.userId) {
     try {
+      const gmailAttachments: GmailAttachment[] = cgvFile
+        ? [{ filename: cgvFile.filename, content: fs.readFileSync(cgvFile.path), contentType: cgvFile.contentType }]
+        : []
+
       await sendEmailViaGmail(options.userId, {
         to: options.to,
         subject: options.subject,
         html: messageHtml,
         from: process.env.SMTP_FROM,
+        attachments: gmailAttachments,
       })
       return
     } catch (err) {
@@ -138,5 +156,6 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
     to: options.to,
     subject: options.subject,
     html: messageHtml,
+    ...(cgvFile ? { attachments: [{ filename: cgvFile.filename, path: cgvFile.path }] } : {}),
   })
 }
