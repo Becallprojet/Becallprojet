@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { sendEmailViaGmail, type GmailAttachment } from './gmail'
+import { BDC_DOCUMENTS } from './bdcDocuments'
 import path from 'path'
 import fs from 'fs'
 
@@ -29,12 +30,13 @@ export interface SendEmailOptions {
   pdfAttachment?: { filename: string; content: Buffer }
 }
 
-function getPdfAttachment(filename: string, publicFile: string): { filename: string; path: string; contentType: string } | null {
-  const filePath = path.join(process.cwd(), 'public', publicFile)
-  if (fs.existsSync(filePath)) {
-    return { filename, path: filePath, contentType: 'application/pdf' }
-  }
-  return null
+function getBdcAttachments(): { filename: string; filePath: string }[] {
+  return BDC_DOCUMENTS
+    .map(doc => ({
+      filename: `${doc.label}.pdf`,
+      filePath: path.join(process.cwd(), 'public', 'docs', `${doc.slug}.pdf`),
+    }))
+    .filter(a => fs.existsSync(a.filePath))
 }
 
 export async function sendDocumentEmail(options: SendEmailOptions) {
@@ -44,15 +46,10 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
       <p style="color:#334155;line-height:1.8;white-space:pre-line;">${options.message.replace(/\n/g, '<br>')}</p>
     </div>`
 
-  // Attach CGV + IPC for BDC emails
-  const bdcAttachments = options.documentType === 'bdc'
-    ? [
-        getPdfAttachment('CGV_BECALL.pdf', 'cgv.pdf'),
-        getPdfAttachment('IPC_BECALL.pdf', 'ipc.pdf'),
-      ].filter(Boolean) as { filename: string; path: string; contentType: string }[]
-    : []
+  // Attach all BDC documents (only for BDC emails)
+  const bdcAttachments = options.documentType === 'bdc' ? getBdcAttachments() : []
 
-  // Build full attachments list (document PDF + CGV/IPC)
+  // Build full attachments list (document PDF + BDC annexes)
   const gmailAttachmentsList: GmailAttachment[] = []
   if (options.pdfAttachment) {
     gmailAttachmentsList.push({
@@ -62,12 +59,12 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
     })
   }
   bdcAttachments.forEach(f =>
-    gmailAttachmentsList.push({ filename: f.filename, content: fs.readFileSync(f.path), contentType: f.contentType })
+    gmailAttachmentsList.push({ filename: f.filename, content: fs.readFileSync(f.filePath), contentType: 'application/pdf' })
   )
 
   const nodemailerAttachments = [
     ...(options.pdfAttachment ? [{ filename: options.pdfAttachment.filename, content: options.pdfAttachment.content }] : []),
-    ...bdcAttachments.map(f => ({ filename: f.filename, path: f.path })),
+    ...bdcAttachments.map(f => ({ filename: f.filename, path: f.filePath })),
   ]
 
   // Attempt to send via Gmail API when a userId is provided
