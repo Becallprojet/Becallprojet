@@ -1,7 +1,7 @@
 export const runtime = 'nodejs'
 
 import { NextRequest, NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import { launchBrowser } from '@/lib/puppeteer'
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,7 +9,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
   let browser
   try {
-    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+    browser = await launchBrowser()
     const page = await browser.newPage()
 
     await page.goto(`${appUrl}/print/bdc/${id}`, { waitUntil: 'networkidle0', timeout: 30000 })
