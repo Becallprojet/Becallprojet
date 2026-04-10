@@ -100,10 +100,10 @@ function generateDocumentHtml(
 </html>`
 }
 
-function getCgvAttachment(): { filename: string; path: string; contentType: string } | null {
-  const cgvPath = path.join(process.cwd(), 'public', 'cgv.pdf')
-  if (fs.existsSync(cgvPath)) {
-    return { filename: 'CGV_BECALL.pdf', path: cgvPath, contentType: 'application/pdf' }
+function getPdfAttachment(filename: string, publicFile: string): { filename: string; path: string; contentType: string } | null {
+  const filePath = path.join(process.cwd(), 'public', publicFile)
+  if (fs.existsSync(filePath)) {
+    return { filename, path: filePath, contentType: 'application/pdf' }
   }
   return null
 }
@@ -125,14 +125,20 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
       ${htmlDocument}
     </div>`
 
-  // Attach CGV only for BDC emails
-  const cgvFile = options.documentType === 'bdc' ? getCgvAttachment() : null
+  // Attach CGV + IPC for BDC emails
+  const bdcAttachments = options.documentType === 'bdc'
+    ? [
+        getPdfAttachment('CGV_BECALL.pdf', 'cgv.pdf'),
+        getPdfAttachment('IPC_BECALL.pdf', 'ipc.pdf'),
+      ].filter(Boolean) as { filename: string; path: string; contentType: string }[]
+    : []
+  const cgvFile = bdcAttachments.length > 0 ? bdcAttachments : null
 
   // Attempt to send via Gmail API when a userId is provided
   if (options.userId) {
     try {
       const gmailAttachments: GmailAttachment[] = cgvFile
-        ? [{ filename: cgvFile.filename, content: fs.readFileSync(cgvFile.path), contentType: cgvFile.contentType }]
+        ? cgvFile.map(f => ({ filename: f.filename, content: fs.readFileSync(f.path), contentType: f.contentType }))
         : []
 
       await sendEmailViaGmail(options.userId, {
@@ -156,6 +162,6 @@ export async function sendDocumentEmail(options: SendEmailOptions) {
     to: options.to,
     subject: options.subject,
     html: messageHtml,
-    ...(cgvFile ? { attachments: [{ filename: cgvFile.filename, path: cgvFile.path }] } : {}),
+    ...(cgvFile ? { attachments: cgvFile.map(f => ({ filename: f.filename, path: f.path })) } : {}),
   })
 }

@@ -25,6 +25,9 @@ function ParametresPageInner() {
   const [cgvExists, setCgvExists] = useState<boolean | null>(null)
   const [cgvUploading, setCgvUploading] = useState(false)
   const [cgvDeleting, setCgvDeleting] = useState(false)
+  const [ipcExists, setIpcExists] = useState<boolean | null>(null)
+  const [ipcUploading, setIpcUploading] = useState(false)
+  const [ipcDeleting, setIpcDeleting] = useState(false)
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const clayWebhookUrl = `${appUrl}/api/webhooks/clay`
@@ -36,6 +39,10 @@ function ParametresPageInner() {
         .then((r) => r.json())
         .then((data) => setCgvExists(data.exists ?? false))
         .catch(() => setCgvExists(false))
+      fetch('/api/admin/ipc')
+        .then((r) => r.json())
+        .then((data) => setIpcExists(data.exists ?? false))
+        .catch(() => setIpcExists(false))
     }
   }, [isAdmin])
 
@@ -104,6 +111,43 @@ function ParametresPageInner() {
       setNotification({ type: 'error', message: 'Erreur lors de la suppression.' })
     } finally {
       setCgvDeleting(false)
+    }
+  }
+
+  const handleIpcUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIpcUploading(true)
+    try {
+      const form = new FormData()
+      form.append('ipc', file)
+      const res = await fetch('/api/admin/ipc', { method: 'POST', body: form })
+      if (res.ok) {
+        setIpcExists(true)
+        setNotification({ type: 'success', message: 'Informations précontractuelles uploadées avec succès.' })
+      } else {
+        setNotification({ type: 'error', message: "Erreur lors de l'upload." })
+      }
+    } catch {
+      setNotification({ type: 'error', message: "Erreur lors de l'upload." })
+    } finally {
+      setIpcUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleIpcDelete = async () => {
+    setIpcDeleting(true)
+    try {
+      const res = await fetch('/api/admin/ipc', { method: 'DELETE' })
+      if (res.ok) {
+        setIpcExists(false)
+        setNotification({ type: 'success', message: 'Informations précontractuelles supprimées.' })
+      }
+    } catch {
+      setNotification({ type: 'error', message: 'Erreur lors de la suppression.' })
+    } finally {
+      setIpcDeleting(false)
     }
   }
 
@@ -321,6 +365,66 @@ function ParametresPageInner() {
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${cgvUploading ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-400' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'}`}>
                   <Upload size={13} />
                   {cgvUploading ? 'Upload...' : cgvExists ? 'Remplacer' : 'Uploader'}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>}
+
+      {/* Section IPC — admin uniquement */}
+      {isAdmin && <div className="bg-white rounded-xl border border-slate-200 mb-6">
+        <div className="px-6 py-4 border-b border-slate-100">
+          <h2 className="font-semibold text-slate-900 text-base">Informations Précontractuelles</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Le PDF sera automatiquement joint à chaque bon de commande envoyé par email.</p>
+        </div>
+        <div className="px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                <FileText size={18} className="text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-900">IPC_BECALL.pdf</p>
+                {ipcExists === null ? (
+                  <p className="text-xs text-slate-400">Chargement...</p>
+                ) : ipcExists ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full mt-1">
+                    <CheckCircle size={11} />
+                    IPC configurée
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full mt-1">
+                    <XCircle size={11} />
+                    Aucune IPC uploadée
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {ipcExists && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleIpcDelete}
+                  loading={ipcDeleting}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <Trash2 size={14} className="mr-1" />
+                  Supprimer
+                </Button>
+              )}
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleIpcUpload}
+                  disabled={ipcUploading}
+                />
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${ipcUploading ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-400' : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 cursor-pointer'}`}>
+                  <Upload size={13} />
+                  {ipcUploading ? 'Upload...' : ipcExists ? 'Remplacer' : 'Uploader'}
                 </span>
               </label>
             </div>
