@@ -49,11 +49,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       userMessage: message,
     })
 
-    // Generate PDF and attach it
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    // Generate PDF using localhost (internal access, no auth needed for print pages)
     let pdfBuffer: Buffer | undefined
     try {
-      pdfBuffer = await generatePDF(`${baseUrl}/print/bdc/${id}`)
+      pdfBuffer = await generatePDF(`http://127.0.0.1:3000/print/bdc/${id}`)
     } catch (err) {
       console.warn('[email] PDF generation failed, sending without attachment:', err)
     }
