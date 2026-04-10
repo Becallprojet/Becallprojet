@@ -5,8 +5,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDocumentEmail } from '@/lib/email'
-import { generatePersonalizedEmail } from '@/lib/gemini'
 import { generatePDF } from '@/lib/puppeteer'
+import { defaultBdcMessage } from '@/lib/emailTemplates'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -31,25 +31,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Bon de commande introuvable' }, { status: 404 })
     }
 
-    // Personalize email body with Gemini (fallback to user's message if Gemini fails/unavailable)
-    const personalizedMessage = await generatePersonalizedEmail({
-      documentType: 'bdc',
-      documentNumero: bdc.numero,
-      documentTotalTTC: bdc.totalTTC,
-      contact: {
-        civilite: bdc.contact?.civilite,
-        prenom: bdc.contact?.prenom ?? '',
-        nom: bdc.contact?.nom ?? '',
-        societe: bdc.contact?.societe,
-        poste: bdc.contact?.poste,
-        stade: bdc.contact?.stade,
-        notes: bdc.contact?.notes,
-      },
-      expediteur: (session?.user as { name?: string } | undefined)?.name ?? undefined,
-      userMessage: message,
-    })
+    // Use user's message if provided, otherwise use standard template
+    const emailMessage = message?.trim()
+      ? message
+      : defaultBdcMessage(
+          {
+            civilite: bdc.contact?.civilite,
+            prenom: bdc.contact?.prenom ?? '',
+            nom: bdc.contact?.nom ?? '',
+            societe: bdc.contact?.societe,
+          },
+          bdc.numero
+        )
 
-    // Generate PDF using localhost (internal access, no auth needed for print pages)
+    // Generate PDF and attach it
     let pdfBuffer: Buffer | undefined
     try {
       pdfBuffer = await generatePDF(`http://127.0.0.1:3000/print/bdc/${id}`)
@@ -60,7 +55,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     await sendDocumentEmail({
       to,
       subject,
-      message: personalizedMessage ?? message ?? '',
+      message: emailMessage,
       documentType: 'bdc',
       documentId: id,
       documentNumero: bdc.numero,
