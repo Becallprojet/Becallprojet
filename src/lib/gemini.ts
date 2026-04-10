@@ -79,7 +79,7 @@ ${ctx.userMessage ? `## Instructions / contexte fourni par le commercial\n${ctx.
 export async function geminiGenerateJSON(prompt: string, systemInstruction: string): Promise<string> {
   const genAI = getGeminiClient()
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-flash',
     systemInstruction,
     generationConfig: {
       responseMimeType: 'application/json',
