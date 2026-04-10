@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDocumentEmail } from '@/lib/email'
+import { generatePersonalizedEmail } from '@/lib/gemini'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,10 +30,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Devis introuvable' }, { status: 404 })
     }
 
+    // Personalize email body with Gemini (fallback to user's message if Gemini fails/unavailable)
+    const personalizedMessage = await generatePersonalizedEmail({
+      documentType: 'devis',
+      documentNumero: devis.numero,
+      documentObjet: devis.objet ?? undefined,
+      documentTotalTTC: devis.totalTTC,
+      contact: {
+        civilite: devis.contact?.civilite,
+        prenom: devis.contact?.prenom ?? '',
+        nom: devis.contact?.nom ?? '',
+        societe: devis.contact?.societe,
+        poste: devis.contact?.poste,
+        stade: devis.contact?.stade,
+        notes: devis.contact?.notes,
+      },
+      expediteur: (session?.user as { name?: string } | undefined)?.name ?? undefined,
+      userMessage: message,
+    })
+
     await sendDocumentEmail({
       to,
       subject,
-      message,
+      message: personalizedMessage ?? message ?? '',
       documentType: 'devis',
       documentId: id,
       documentNumero: devis.numero,
@@ -50,6 +70,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: 'Erreur lors de l\'envoi de l\'email' }, { status: 500 })
+    return NextResponse.json({ error: "Erreur lors de l'envoi de l'email" }, { status: 500 })
   }
 }

@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendDocumentEmail } from '@/lib/email'
+import { generatePersonalizedEmail } from '@/lib/gemini'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,10 +30,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Bon de commande introuvable' }, { status: 404 })
     }
 
+    // Personalize email body with Gemini (fallback to user's message if Gemini fails/unavailable)
+    const personalizedMessage = await generatePersonalizedEmail({
+      documentType: 'bdc',
+      documentNumero: bdc.numero,
+      documentTotalTTC: bdc.totalTTC,
+      contact: {
+        civilite: bdc.contact?.civilite,
+        prenom: bdc.contact?.prenom ?? '',
+        nom: bdc.contact?.nom ?? '',
+        societe: bdc.contact?.societe,
+        poste: bdc.contact?.poste,
+        stade: bdc.contact?.stade,
+        notes: bdc.contact?.notes,
+      },
+      expediteur: (session?.user as { name?: string } | undefined)?.name ?? undefined,
+      userMessage: message,
+    })
+
     await sendDocumentEmail({
       to,
       subject,
-      message,
+      message: personalizedMessage ?? message ?? '',
       documentType: 'bdc',
       documentId: id,
       documentNumero: bdc.numero,
@@ -40,16 +59,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       userId: (session?.user as { id?: string } | undefined)?.id,
     })
 
-    if (bdc.statut === 'EN_COURS') {
-      await prisma.bonDeCommande.update({
-        where: { id },
-        data: { statut: 'EN_COURS' },
-      })
-    }
-
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error(error)
-    return NextResponse.json({ error: 'Erreur lors de l\'envoi de l\'email' }, { status: 500 })
+    return NextResponse.json({ error: "Erreur lors de l'envoi de l'email" }, { status: 500 })
   }
 }
