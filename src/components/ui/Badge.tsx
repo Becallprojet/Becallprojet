@@ -62,6 +62,30 @@ export function StatutBdcBadge({ statut }: { statut: string }) {
   return <Badge variant={variant}>{label}</Badge>
 }
 
+export function StatutLeadLinkedinBadge({ statut }: { statut: string }) {
+  const map: Record<string, { variant: BadgeVariant; label: string }> = {
+    IMPORTE:           { variant: 'gray',   label: 'Importé' },
+    INVITATION_ENVOYEE:{ variant: 'blue',   label: 'Invitation envoyée' },
+    CONNECTE:          { variant: 'blue',   label: 'Connecté' },
+    REPOND:            { variant: 'green',  label: 'A répondu' },
+    SANS_REPONSE:      { variant: 'orange', label: 'Sans réponse' },
+    CONVERTI:          { variant: 'purple', label: 'Converti' },
+  }
+  const { variant, label } = map[statut] || { variant: 'gray', label: statut }
+  return <Badge variant={variant}>{label}</Badge>
+}
+
+export function StadeOpportuniteLinkedinBadge({ stade }: { stade: string }) {
+  const map: Record<string, { variant: BadgeVariant; label: string }> = {
+    NOUVEAU_PROJET:  { variant: 'blue',   label: 'Nouveau projet' },
+    EN_NEGOCIATION:  { variant: 'orange', label: 'En négociation' },
+    GAGNE:           { variant: 'green',  label: 'Gagné' },
+    PERDU:           { variant: 'red',    label: 'Perdu' },
+  }
+  const { variant, label } = map[stade] || { variant: 'gray', label: stade }
+  return <Badge variant={variant}>{label}</Badge>
+}
+
 export function StadeProspectBadge({ stade }: { stade: string }) {
   const map: Record<string, { variant: BadgeVariant }> = {
     NOUVEAU:     { variant: 'gray' },

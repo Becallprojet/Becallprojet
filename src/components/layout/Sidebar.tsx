@@ -6,13 +6,14 @@ import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard, Users, FileText,
-  ClipboardList, BookOpen, ShieldCheck, LogOut, UserCheck, GitBranch, Calendar, Settings,
+  ClipboardList, BookOpen, ShieldCheck, LogOut, UserCheck, GitBranch, Calendar, Settings, Linkedin,
 } from 'lucide-react'
 
 const navItems = [
   { href: '/',            label: 'Tableau de bord',  icon: LayoutDashboard },
   { href: '/contacts',    label: 'Prospects',         icon: Users },
   { href: '/pipeline',    label: 'Pipeline',          icon: GitBranch },
+  { href: '/leads',       label: 'Leads LinkedIn',    icon: Linkedin },
   { href: '/calendrier',  label: 'Calendrier',        icon: Calendar },
   { href: '/clients',     label: 'Clients',           icon: UserCheck },
   { href: '/devis',       label: 'Devis',             icon: FileText },

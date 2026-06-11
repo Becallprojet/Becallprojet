@@ -20,11 +20,13 @@ model User {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
-  activites      Activite[]
-  rappels        Rappel[]
-  contacts       Contact[]
-  devis          Devis[]
-  bonsDeCommande BonDeCommande[]
+  activites            Activite[]
+  rappels              Rappel[]
+  contacts             Contact[]
+  devis                Devis[]
+  bonsDeCommande       BonDeCommande[]
+  campagnesLinkedin    CampagneLinkedin[]
+  opportunitesLinkedin OpportuniteLinkedin[]
 }
 
 model Contact {
@@ -217,4 +219,52 @@ model Rappel {
   fait       Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model CampagneLinkedin {
+  id              String         @id @default(cuid())
+  nom             String
+  produit         String
+  messageTemplate String
+  statut          String         @default("ACTIVE")
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  leads           LeadLinkedin[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model LeadLinkedin {
+  id                 String               @id @default(cuid())
+  campagneId         String
+  campagne           CampagneLinkedin     @relation(fields: [campagneId], references: [id], onDelete: Cascade)
+  prenom             String
+  nom                String
+  email              String?
+  telephone          String?
+  linkedinUrl        String?
+  linkedinProviderId String?
+  societe            String?
+  poste              String?
+  statutLinkedin     String               @default("IMPORTE")
+  messagePersonnalise String?
+  invitationId       String?
+  chatId             String?
+  notes              String?
+  opportunite        OpportuniteLinkedin?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model OpportuniteLinkedin {
+  id            String       @id @default(cuid())
+  leadId        String       @unique
+  lead          LeadLinkedin @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  stade         String       @default("NOUVEAU_PROJET")
+  notes         String?
+  valeurEstimee Float?
+  userId        String
+  user          User         @relation(fields: [userId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
