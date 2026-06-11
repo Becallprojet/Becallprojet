@@ -3,23 +3,9 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { Settings, Calendar, Zap, CheckCircle, XCircle, Copy, Check, FileText, Upload, Trash2, Users, Plus, Pencil, ShieldCheck, User } from 'lucide-react'
+import { Settings, Calendar, Zap, CheckCircle, XCircle, Copy, Check, FileText, Upload, Trash2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import Modal from '@/components/ui/Modal'
 import { BDC_DOCUMENTS } from '@/lib/bdcDocuments'
-
-interface UserRow {
-  id: string
-  email: string
-  nom: string
-  prenom: string
-  role: string
-  actif: boolean
-  createdAt: string
-}
-
-const emptyForm = { prenom: '', nom: '', email: '', password: '', role: 'USER' }
 
 export default function ParametresPage() {
   return (
@@ -33,8 +19,6 @@ function ParametresPageInner() {
   const searchParams = useSearchParams()
   const { data: session } = useSession()
   const isAdmin = (session?.user as { role?: string })?.role === 'ADMIN'
-  const currentUserId = (session?.user as { id?: string })?.id
-
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -43,80 +27,8 @@ function ParametresPageInner() {
   const [docUploading, setDocUploading] = useState<Record<string, boolean>>({})
   const [docDeleting, setDocDeleting] = useState<Record<string, boolean>>({})
 
-  // Users state
-  const [users, setUsers] = useState<UserRow[]>([])
-  const [usersLoading, setUsersLoading] = useState(false)
-  const [userModal, setUserModal] = useState<{ open: boolean; mode: 'add' | 'edit'; user?: UserRow }>({ open: false, mode: 'add' })
-  const [userForm, setUserForm] = useState(emptyForm)
-  const [userSaving, setUserSaving] = useState(false)
-  const [userDeleting, setUserDeleting] = useState<string | null>(null)
-
-  const fetchUsers = async () => {
-    setUsersLoading(true)
-    try {
-      const res = await fetch('/api/admin/users')
-      if (res.ok) setUsers(await res.json())
-    } finally {
-      setUsersLoading(false)
-    }
-  }
-
-  const openAdd = () => {
-    setUserForm(emptyForm)
-    setUserModal({ open: true, mode: 'add' })
-  }
-
-  const openEdit = (u: UserRow) => {
-    setUserForm({ prenom: u.prenom, nom: u.nom, email: u.email, password: '', role: u.role })
-    setUserModal({ open: true, mode: 'edit', user: u })
-  }
-
-  const closeUserModal = () => setUserModal({ open: false, mode: 'add' })
-
-  const saveUser = async () => {
-    setUserSaving(true)
-    try {
-      const isEdit = userModal.mode === 'edit'
-      const url = isEdit ? `/api/admin/users/${userModal.user!.id}` : '/api/admin/users'
-      const body: Record<string, unknown> = { ...userForm }
-      if (isEdit && !body.password) delete body.password
-      const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (res.ok) {
-        setNotification({ type: 'success', message: isEdit ? 'Utilisateur mis à jour.' : 'Utilisateur créé.' })
-        closeUserModal()
-        fetchUsers()
-      } else {
-        const data = await res.json()
-        setNotification({ type: 'error', message: data.error || 'Erreur lors de la sauvegarde.' })
-      }
-    } finally {
-      setUserSaving(false)
-    }
-  }
-
-  const deleteUser = async (id: string) => {
-    if (!confirm('Supprimer cet utilisateur ?')) return
-    setUserDeleting(id)
-    try {
-      const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        setNotification({ type: 'success', message: 'Utilisateur supprimé.' })
-        setUsers(prev => prev.filter(u => u.id !== id))
-      } else {
-        const data = await res.json()
-        setNotification({ type: 'error', message: data.error || 'Erreur lors de la suppression.' })
-      }
-    } finally {
-      setUserDeleting(null)
-    }
-  }
-
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
   const clayWebhookUrl = `${appUrl}/api/webhooks/clay`
-
-  useEffect(() => {
-    if (isAdmin) fetchUsers()
-  }, [isAdmin])
 
   useEffect(() => {
     if (isAdmin) {
@@ -224,93 +136,6 @@ function ParametresPageInner() {
           <button onClick={() => setNotification(null)} className="ml-auto text-current opacity-60 hover:opacity-100">×</button>
         </div>
       )}
-
-      {/* Section Utilisateurs — admin uniquement */}
-      {isAdmin && (
-        <div className="bg-white rounded-xl border border-slate-200 mb-6">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-slate-900 text-base">Utilisateurs</h2>
-              <p className="text-sm text-slate-500 mt-0.5">Gérez les comptes ayant accès au CRM.</p>
-            </div>
-            <Button size="sm" onClick={openAdd}>
-              <Plus size={14} className="mr-1" /> Ajouter
-            </Button>
-          </div>
-
-          {usersLoading ? (
-            <div className="px-6 py-8 text-center text-sm text-slate-400">Chargement...</div>
-          ) : (
-            <div className="divide-y divide-slate-50">
-              {users.map(u => (
-                <div key={u.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-semibold ${u.role === 'ADMIN' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                      {u.prenom[0]}{u.nom[0]}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-slate-900 truncate">{u.prenom} {u.nom}</p>
-                        {u.role === 'ADMIN' ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
-                            <ShieldCheck size={10} /> Admin
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                            <User size={10} /> Utilisateur
-                          </span>
-                        )}
-                        {!u.actif && (
-                          <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">Désactivé</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-400 truncate">{u.email}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(u)}>
-                      <Pencil size={13} />
-                    </Button>
-                    {u.id !== currentUserId && (
-                      <Button variant="outline" size="sm" onClick={() => deleteUser(u.id)} loading={userDeleting === u.id} className="text-red-600 border-red-200 hover:bg-red-50">
-                        <Trash2 size={13} />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {users.length === 0 && (
-                <div className="px-6 py-8 text-center text-sm text-slate-400">Aucun utilisateur.</div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Modal ajouter / modifier utilisateur */}
-      <Modal open={userModal.open} onClose={closeUserModal} title={userModal.mode === 'add' ? 'Nouvel utilisateur' : 'Modifier l\'utilisateur'}>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Prénom" value={userForm.prenom} onChange={e => setUserForm(f => ({ ...f, prenom: e.target.value }))} />
-            <Input label="Nom" value={userForm.nom} onChange={e => setUserForm(f => ({ ...f, nom: e.target.value }))} />
-          </div>
-          <Input label="Email" type="email" value={userForm.email} onChange={e => setUserForm(f => ({ ...f, email: e.target.value }))} />
-          <Input label={userModal.mode === 'edit' ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'} type="password" value={userForm.password} onChange={e => setUserForm(f => ({ ...f, password: e.target.value }))} />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rôle</label>
-            <select value={userForm.role} onChange={e => setUserForm(f => ({ ...f, role: e.target.value }))} className="w-full px-3 py-2 text-sm rounded-lg bg-white border border-[#d0dff5] focus:outline-none focus:ring-2 focus:ring-[#1A5FBF]/30">
-              <option value="USER">Utilisateur</option>
-              <option value="ADMIN">Administrateur</option>
-            </select>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={closeUserModal}>Annuler</Button>
-            <Button onClick={saveUser} loading={userSaving}>
-              {userModal.mode === 'add' ? 'Créer' : 'Enregistrer'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
 
       {/* Section Intégrations */}
       <div className="bg-white rounded-xl border border-slate-200 mb-6">
